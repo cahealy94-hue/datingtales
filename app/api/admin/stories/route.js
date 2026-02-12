@@ -36,12 +36,20 @@ export async function PATCH(request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id, status } = await request.json();
+  const body = await request.json();
+  const { id, status, title, rewritten_text, author_persona, theme } = body;
 
-  const updateData = { status };
-  if (status === "published") {
-    updateData.published_at = new Date().toISOString();
+  const updateData = {};
+  if (status) {
+    updateData.status = status;
+    if (status === "published") {
+      updateData.published_at = new Date().toISOString();
+    }
   }
+  if (title !== undefined) updateData.title = title;
+  if (rewritten_text !== undefined) updateData.rewritten_text = rewritten_text;
+  if (author_persona !== undefined) updateData.author_persona = author_persona;
+  if (theme !== undefined) updateData.theme = theme;
 
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/stories?id=eq.${id}`,

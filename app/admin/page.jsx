@@ -10,6 +10,11 @@ export default function AdminPage() {
   const [filter, setFilter] = useState("pending");
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editText, setEditText] = useState("");
+  const [editPersona, setEditPersona] = useState("");
+  const [editTheme, setEditTheme] = useState("");
 
   const login = async () => {
     const res = await fetch("/api/admin/auth", {
@@ -61,6 +66,35 @@ export default function AdminPage() {
       body: JSON.stringify({ id, status }),
     });
     setStories(prev => prev.filter(s => s.id !== id));
+    setActionLoading(null);
+  };
+
+  const startEdit = (story) => {
+    setEditing(story.id);
+    setEditTitle(story.title || "");
+    setEditText(story.rewritten_text || "");
+    setEditPersona(story.author_persona || "");
+    setEditTheme(story.theme || "");
+  };
+
+  const saveEdit = async (id) => {
+    setActionLoading(id);
+    await fetch("/api/admin/stories", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "x-admin-password": password },
+      body: JSON.stringify({
+        id,
+        title: editTitle,
+        rewritten_text: editText,
+        author_persona: editPersona,
+        theme: editTheme,
+      }),
+    });
+    setStories(prev => prev.map(s => s.id === id ? {
+      ...s, title: editTitle, rewritten_text: editText,
+      author_persona: editPersona, theme: editTheme,
+    } : s));
+    setEditing(null);
     setActionLoading(null);
   };
 
@@ -146,6 +180,29 @@ export default function AdminPage() {
     .stat-card .num { font-family: 'DM Serif Display', serif; font-size: 28px; }
     .stat-card .label { font-size: 12px; color: #9A9A9A; font-weight: 500; }
     .timestamp { font-size: 11px; color: #9A9A9A; }
+    .edit-field { width: 100%; padding: 10px 14px; border: 2px solid #E8E4DF; border-radius: 10px; font-size: 14px; font-family: inherit; margin-bottom: 8px; background: #FAFAF7; resize: vertical; }
+    .edit-field:focus { outline: none; border-color: #5B8FB9; }
+    .edit-label { font-size: 11px; font-weight: 700; color: #9A9A9A; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .edit-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .edit-row .edit-field { flex: 1; }
+    .btn-edit {
+      padding: 10px 24px; background: white; color: #5B8FB9; border: 1.5px solid #BDD8EC;
+      border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .btn-edit:hover { background: #E8F1F8; border-color: #5B8FB9; }
+    .btn-save {
+      padding: 10px 24px; background: #5B8FB9; color: white; border: none;
+      border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: background 0.2s;
+    }
+    .btn-save:hover { background: #3A6B8C; }
+    .btn-cancel {
+      padding: 10px 24px; background: white; color: #6B6B6B; border: 1.5px solid #E8E4DF;
+      border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .btn-cancel:hover { background: #F5F5F0; }
   `;
 
   if (!authed) {
@@ -199,56 +256,96 @@ export default function AdminPage() {
         ) : (
           stories.map(story => (
             <div className="story-row" key={story.id}>
-              <div className="story-row-header">
-                <h3>{story.title || "Untitled"}</h3>
-                <span className="timestamp">
-                  {new Date(story.submitted_at).toLocaleDateString()}
-                </span>
-              </div>
-              <div className="story-row-meta">
-                {story.theme && <span className="story-tag tag-theme">{story.theme}</span>}
-                {story.author_persona && <span className="story-tag tag-persona">{story.author_persona}</span>}
-                <span className="story-tag tag-status">{story.status}</span>
-              </div>
-              {story.original_text && (
-                <div className="original">
-                  <strong>Original:</strong> {story.original_text}
-                </div>
-              )}
-              {story.rewritten_text && (
-                <div className="rewritten">
-                  <strong>AI rewritten:</strong><br />{story.rewritten_text}
-                </div>
-              )}
-              <div className="story-actions">
-                {filter === "pending" && (
-                  <>
-                    <button
-                      className="btn-approve"
-                      onClick={() => updateStatus(story.id, "approved")}
-                      disabled={actionLoading === story.id}
-                    >
-                      {actionLoading === story.id ? "..." : "Approve"}
+              {editing === story.id ? (
+                <>
+                  <div className="edit-label">Title</div>
+                  <input className="edit-field" value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+                  <div className="edit-row">
+                    <div style={{flex:1}}>
+                      <div className="edit-label">Theme</div>
+                      <select className="edit-field" value={editTheme} onChange={e => setEditTheme(e.target.value)}>
+                        <option>First Dates</option>
+                        <option>Meet Cutes</option>
+                        <option>Dating App Disasters</option>
+                        <option>Awkward Moments</option>
+                        <option>Meeting the Family</option>
+                        <option>Situationships</option>
+                      </select>
+                    </div>
+                    <div style={{flex:1}}>
+                      <div className="edit-label">Persona</div>
+                      <input className="edit-field" value={editPersona} onChange={e => setEditPersona(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="edit-label">Rewritten story</div>
+                  <textarea className="edit-field" rows={5} value={editText} onChange={e => setEditText(e.target.value)} />
+                  {story.original_text && (
+                    <div className="original">
+                      <strong>Original:</strong> {story.original_text}
+                    </div>
+                  )}
+                  <div className="story-actions" style={{marginTop: 12}}>
+                    <button className="btn-save" onClick={() => saveEdit(story.id)} disabled={actionLoading === story.id}>
+                      {actionLoading === story.id ? "..." : "Save"}
                     </button>
-                    <button
-                      className="btn-reject"
-                      onClick={() => updateStatus(story.id, "rejected")}
-                      disabled={actionLoading === story.id}
-                    >
-                      Reject
-                    </button>
-                  </>
-                )}
-                {filter === "approved" && (
-                  <button
-                    className="btn-publish"
-                    onClick={() => updateStatus(story.id, "published")}
-                    disabled={actionLoading === story.id}
-                  >
-                    {actionLoading === story.id ? "..." : "Publish now"}
-                  </button>
-                )}
-              </div>
+                    <button className="btn-cancel" onClick={() => setEditing(null)}>Cancel</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="story-row-header">
+                    <h3>{story.title || "Untitled"}</h3>
+                    <span className="timestamp">
+                      {new Date(story.submitted_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="story-row-meta">
+                    {story.theme && <span className="story-tag tag-theme">{story.theme}</span>}
+                    {story.author_persona && <span className="story-tag tag-persona">{story.author_persona}</span>}
+                    <span className="story-tag tag-status">{story.status}</span>
+                  </div>
+                  {story.original_text && (
+                    <div className="original">
+                      <strong>Original:</strong> {story.original_text}
+                    </div>
+                  )}
+                  {story.rewritten_text && (
+                    <div className="rewritten">
+                      <strong>AI rewritten:</strong><br />{story.rewritten_text}
+                    </div>
+                  )}
+                  <div className="story-actions">
+                    <button className="btn-edit" onClick={() => startEdit(story)}>Edit</button>
+                    {filter === "pending" && (
+                      <>
+                        <button
+                          className="btn-approve"
+                          onClick={() => updateStatus(story.id, "approved")}
+                          disabled={actionLoading === story.id}
+                        >
+                          {actionLoading === story.id ? "..." : "Approve"}
+                        </button>
+                        <button
+                          className="btn-reject"
+                          onClick={() => updateStatus(story.id, "rejected")}
+                          disabled={actionLoading === story.id}
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                    {filter === "approved" && (
+                      <button
+                        className="btn-publish"
+                        onClick={() => updateStatus(story.id, "published")}
+                        disabled={actionLoading === story.id}
+                      >
+                        {actionLoading === story.id ? "..." : "Publish now"}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           ))
         )}

@@ -29,7 +29,7 @@ export async function POST(request) {
 RULES:
 1. REJECT if the story contains: explicit sexual content, hate speech, harassment, illegal activity, defamation, or violent content. If rejecting, respond with: {"status":"rejected","reason":"brief reason"}
 2. If acceptable, REWRITE the story to:
-   - Be 500 characters or less
+   - Be 300 characters or less
    - Remove any identifying details (real names, specific cities, employers, schools)
    - Replace names with generic terms (e.g., "my date", "they", "he", "she")
    - Replace specific locations with generalized ones (e.g., "a coffee shop downtown")
@@ -60,7 +60,7 @@ ${storyText}`
       title: "A Dating Tale",
       theme: "Awkward Moments",
       author: "Anonymous Storyteller",
-      rewritten: storyText.slice(0, 500),
+      rewritten: storyText.slice(0, 300),
     };
   }
 

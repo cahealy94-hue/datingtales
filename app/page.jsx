@@ -95,7 +95,7 @@ async function moderateStory(storyText) {
 RULES:
 1. REJECT if the story contains: explicit sexual content, hate speech, harassment, illegal activity, defamation, or violent content. If rejecting, respond with: {"status":"rejected","reason":"brief reason"}
 2. If acceptable, REWRITE the story to:
-   - Be 500 characters or less
+   - Be 300 characters or less
    - Remove any identifying details (real names, specific cities, employers, schools)
    - Replace names with generic terms (e.g., "my date", "they", "he", "she")
    - Replace specific locations with generalized ones (e.g., "a coffee shop downtown")
@@ -120,7 +120,7 @@ ${storyText}`
     return JSON.parse(clean);
   } catch (err) {
     console.error("AI moderation error:", err);
-    return { status: "approved", title: "A Dating Tale", theme: "Awkward Moments", author: "Anonymous Storyteller", rewritten: storyText.slice(0, 500) };
+    return { status: "approved", title: "A Dating Tale", theme: "Awkward Moments", author: "Anonymous Storyteller", rewritten: storyText.slice(0, 300) };
   }
 }
 
@@ -1257,8 +1257,8 @@ export default function DatingTales() {
                   placeholder="Tell us your funniest, cringiest, or cutest dating moment…"
                   maxLength={600}
                 />
-                <span className={`char-count ${storyText.length > 500 ? "over" : storyText.length > 400 ? "warn" : ""}`}>
-                  {storyText.length}/500
+                <span className={`char-count ${storyText.length > 300 ? "over" : storyText.length > 240 ? "warn" : ""}`}>
+                  {storyText.length}/300
                 </span>
               </div>
               <button
@@ -1454,8 +1454,8 @@ export default function DatingTales() {
                     placeholder="Tell us your funniest, cringiest, or cutest dating moment…"
                     maxLength={600}
                   />
-                  <div className={`submit-page-count ${storyText.length > 500 ? "over" : storyText.length > 400 ? "warn" : ""}`}>
-                    {storyText.length}/500
+                  <div className={`submit-page-count ${storyText.length > 300 ? "over" : storyText.length > 240 ? "warn" : ""}`}>
+                    {storyText.length}/300
                   </div>
                 </div>
                 <button
