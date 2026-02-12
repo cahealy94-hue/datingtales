@@ -1,4 +1,3 @@
-"use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 
 // ── Sample Stories Data ──
@@ -1056,7 +1055,7 @@ export default function DatingTales() {
       .hamburger { display: block; }
       .hero h1 { font-size: 36px; }
       .hero { padding: 48px 24px 40px; grid-template-columns: 1fr; gap: 32px; }
-      .hero-illustration { order: -1; }
+      .hero-illustration { display: none; }
       .hero-illustration-inner { max-width: 340px; margin: 0 auto; }
       .hero-content { text-align: left; }
       .hero-email-form { padding: 4px 4px 4px 16px; }
@@ -1246,25 +1245,6 @@ export default function DatingTales() {
                 <div className="value-icon">😂</div>
                 <h3>Need a laugh?</h3>
                 <p>Perfect for anyone living vicariously through dating drama. New stories every Friday to get you through the weekend.</p>
-              </div>
-            </div>
-          </section>
-
-          {/* Stats */}
-          <section className="stats-section">
-            <h2>Join the community</h2>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <div className="stat-number">2,500+</div>
-                <div className="stat-label">Weekly readers</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-number">150+</div>
-                <div className="stat-label">Stories shared</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-number">98%</div>
-                <div className="stat-label">Laugh guarantee</div>
               </div>
             </div>
           </section>
