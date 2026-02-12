@@ -231,28 +231,26 @@ export default function DatingTales() {
     if (!storyText.trim() || submitting) return;
     setSubmitting(true);
     setSubmitResult(null);
-    const result = await moderateStory(storyText);
-    if (result.status === "rejected") {
-      setSubmitResult({ type: "rejected", message: result.reason || "We couldn't publish this one — but we'd love a lighter version!" });
-    } else {
-      const newStory = {
-        id: Date.now(), title: result.title, theme: result.theme,
-        author: result.author, trending: false, text: result.rewritten,
-        likes: 0, publishedAt: new Date().toISOString().split("T")[0],
-        reactions: {}
-      };
-      setStories(prev => [newStory, ...prev]);
-      setSubmitResult({ type: "approved", story: newStory });
-      setStoryText("");
-      // Save to database
-      await supabaseInsert("stories", {
-        original_text: storyText,
-        rewritten_text: result.rewritten,
-        title: result.title,
-        theme: result.theme,
-        author_persona: result.author,
-        status: "pending",
+    try {
+      const res = await fetch("/api/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storyText }),
       });
+      const result = await res.json();
+      if (result.status === "rejected") {
+        setSubmitResult({ type: "rejected", message: result.reason || "We couldn't publish this one — but we'd love a lighter version!" });
+      } else {
+        const previewStory = {
+          title: result.title, theme: result.theme,
+          author: result.author, text: result.rewritten,
+        };
+        setSubmitResult({ type: "approved", story: previewStory });
+        setStoryText("");
+      }
+    } catch (err) {
+      console.error("Submit error:", err);
+      setSubmitResult({ type: "rejected", message: "Something went wrong. Please try again!" });
     }
     setSubmitting(false);
   }, [storyText, submitting]);
