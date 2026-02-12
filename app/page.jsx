@@ -206,19 +206,24 @@ export default function DatingTales() {
     await supabaseInsert("subscribers", { email });
   }, [email]);
 
-  const handleReport = useCallback((storyId, reason) => {
+  const handleReport = useCallback(async (storyId, reason) => {
     // Hide for this user immediately
     setHiddenStories(prev => new Set([...prev, storyId]));
-    // Track report count
-    setReportCounts(prev => {
-      const newCount = (prev[storyId] || 0) + 1;
-      const updated = { ...prev, [storyId]: newCount };
-      // Remove story entirely at 5 reports
-      if (newCount >= 5) {
+    // Save report to database and let server handle threshold
+    try {
+      const res = await fetch("/api/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storyId, reason }),
+      });
+      const data = await res.json();
+      // If server says story was deleted, remove from local state
+      if (data.deleted) {
         setStories(s => s.filter(story => story.id !== storyId));
       }
-      return updated;
-    });
+    } catch (err) {
+      console.error("Report error:", err);
+    }
   }, []);
 
   useEffect(() => {

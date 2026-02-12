@@ -17,9 +17,15 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") || "pending";
 
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/stories?status=eq.${status}&order=submitted_at.desc`,
-    {
+  let url;
+  if (status === "reported") {
+    // Show published stories with at least 1 report (but not yet deleted)
+    url = `${SUPABASE_URL}/rest/v1/stories?report_count=gt.0&status=eq.published&order=report_count.desc`;
+  } else {
+    url = `${SUPABASE_URL}/rest/v1/stories?status=eq.${status}&order=submitted_at.desc`;
+  }
+
+  const res = await fetch(url, {
       headers: {
         apikey: getServiceKey(),
         Authorization: `Bearer ${getServiceKey()}`,

@@ -147,6 +147,7 @@ export default function AdminPage() {
     .tag-theme { background: #E8F1F8; color: #3A6B8C; }
     .tag-persona { background: #FFF0EC; color: #D4654D; }
     .tag-status { background: #FEFCBF; color: #975A16; }
+    .tag-reported { background: #FED7D7; color: #C53030; }
     .story-row .original { font-size: 13px; color: #9A9A9A; margin-bottom: 8px; padding: 12px; background: #FAFAF7; border-radius: 8px; }
     .story-row .original strong { color: #6B6B6B; }
     .story-row .rewritten { font-size: 14px; color: #2C2C2C; line-height: 1.6; margin-bottom: 12px; }
@@ -236,7 +237,7 @@ export default function AdminPage() {
         </div>
 
         <div className="filter-tabs">
-          {["pending", "approved", "published", "rejected"].map(s => (
+          {["pending", "approved", "published", "reported", "deleted", "rejected"].map(s => (
             <button
               key={s}
               className={`filter-tab ${filter === s ? "active" : ""}`}
@@ -303,6 +304,7 @@ export default function AdminPage() {
                     {story.theme && <span className="story-tag tag-theme">{story.theme}</span>}
                     {story.author_persona && <span className="story-tag tag-persona">{story.author_persona}</span>}
                     <span className="story-tag tag-status">{story.status}</span>
+                    {story.report_count > 0 && <span className="story-tag tag-reported">{story.report_count} report{story.report_count !== 1 ? "s" : ""}</span>}
                   </div>
                   {story.original_text && (
                     <div className="original">
@@ -341,6 +343,24 @@ export default function AdminPage() {
                         disabled={actionLoading === story.id}
                       >
                         {actionLoading === story.id ? "..." : "Publish now"}
+                      </button>
+                    )}
+                    {filter === "reported" && (
+                      <button
+                        className="btn-reject"
+                        onClick={() => updateStatus(story.id, "deleted")}
+                        disabled={actionLoading === story.id}
+                      >
+                        {actionLoading === story.id ? "..." : "Delete"}
+                      </button>
+                    )}
+                    {filter === "deleted" && (
+                      <button
+                        className="btn-publish"
+                        onClick={() => updateStatus(story.id, "published")}
+                        disabled={actionLoading === story.id}
+                      >
+                        {actionLoading === story.id ? "..." : "Restore"}
                       </button>
                     )}
                   </div>
