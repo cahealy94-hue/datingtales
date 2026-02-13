@@ -9,6 +9,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const Arrow = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>;
 const CheckIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
 const FlagIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>;
+const ShareIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12l-7-7v4C7 9 4 14 3 19c2.5-3.5 6-5.1 11-5.1V18l7-6z"/></svg>;
 
 // ── Fallback Stories ──
 const SAMPLE_STORIES = [
@@ -32,6 +33,7 @@ function StoryCard({ story, onReaction, onReport, reacted }) {
   const [reportStep, setReportStep] = useState(null);
   const [selectedReason, setSelectedReason] = useState(null);
   const [pendingReport, setPendingReport] = useState(false);
+  const [shared, setShared] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -44,6 +46,21 @@ function StoryCard({ story, onReaction, onReport, reacted }) {
   const handleSubmitReport = () => { if (!selectedReason) return; setPendingReport(true); setReportStep("done"); };
   const handleCloseReport = () => { setReportStep(null); if (pendingReport) { onReport(story.id, selectedReason); } setSelectedReason(null); setPendingReport(false); };
 
+  const handleShare = async () => {
+    const shareText = `"${story.title}" — ${story.text}\n\n— ${story.author} on The Dating Tales`;
+    const shareUrl = "https://thedatingtales.com";
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: story.title, text: shareText, url: shareUrl });
+        return;
+      }
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      }
+    } catch {}
+    setShared(true); setTimeout(() => setShared(false), 2500);
+  };
+
   const themeClass = `theme-${story.theme.toLowerCase().replace(/ /g, "-")}`;
 
   return (
@@ -55,7 +72,10 @@ function StoryCard({ story, onReaction, onReport, reacted }) {
             <button className="story-card-dots" onClick={() => setMenuOpen(!menuOpen)}>···</button>
             {menuOpen && (
               <div className="story-menu-dropdown">
-                <button className="story-menu-item" onClick={() => { setMenuOpen(false); setReportStep("select"); }}>
+                <button className="story-menu-item share-item" onClick={() => { setMenuOpen(false); handleShare(); }}>
+                  <ShareIcon /> Share Story
+                </button>
+                <button className="story-menu-item report-item" onClick={() => { setMenuOpen(false); setReportStep("select"); }}>
                   <FlagIcon /> Report Story
                 </button>
               </div>
@@ -109,6 +129,12 @@ function StoryCard({ story, onReaction, onReport, reacted }) {
           </div>
         </div>
       )}
+
+      {shared && (
+        <div className="share-toast">
+          <CheckIcon /> Link copied
+        </div>
+      )}
     </>
   );
 }
@@ -132,9 +158,11 @@ export default function DatingTalesV2() {
   const [submitResult, setSubmitResult] = useState(null);
   const [storyReactions, setStoryReactions] = useState({});
   const [hiddenStories, setHiddenStories] = useState(new Set());
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   const setPage = (p) => {
     setPageState(p);
+    setMobileMenu(false);
     const url = p === "home" ? "/" : `/${p}`;
     window.history.pushState({}, "", url);
     window.scrollTo(0, 0);
@@ -147,6 +175,8 @@ export default function DatingTalesV2() {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
+
+  // (Supabase fetch disabled for preview — works in production)
 
   // Fetch published stories from Supabase
   useEffect(() => {
@@ -241,10 +271,16 @@ export default function DatingTalesV2() {
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
   const thisWeekStories = visibleStories.filter(s => s.publishedAt >= weekAgo);
   const olderStories = visibleStories.filter(s => s.publishedAt < weekAgo);
-  const homeStories = thisWeekStories.slice(0, 4);
+  const sortByReactions = (arr) => [...arr].sort((a, b) => {
+    const totalA = Object.values(a.reactions || {}).reduce((sum, n) => sum + n, 0);
+    const totalB = Object.values(b.reactions || {}).reduce((sum, n) => sum + n, 0);
+    return totalB - totalA;
+  });
+  const homeStories = sortByReactions(thisWeekStories).slice(0, 4);
 
-  const filteredThisWeek = filter === "All" ? thisWeekStories : thisWeekStories.filter(s => s.theme === filter);
-  const filteredOlder = filter === "All" ? olderStories : olderStories.filter(s => s.theme === filter);
+  const filteredThisWeek = sortByReactions(filter === "All" ? thisWeekStories : thisWeekStories.filter(s => s.theme === filter));
+  const filteredOlderUnsorted = filter === "All" ? olderStories : olderStories.filter(s => s.theme === filter);
+  const filteredOlder = sortByReactions(filteredOlderUnsorted);
   const allThemes = ["All", ...THEMES];
 
   const css = `
@@ -304,6 +340,11 @@ export default function DatingTalesV2() {
       border-radius: 14px; border: none; cursor: pointer; transition: all 0.2s;
     }
     .nav-share:hover { background: #1E293B; }
+    .nav-hamburger {
+      display: none; background: none; border: none; color: var(--black);
+      cursor: pointer; padding: 4px;
+    }
+    .mobile-menu { display: none; }
 
     /* ── Hero ── */
     .hero {
@@ -404,7 +445,7 @@ export default function DatingTalesV2() {
       border: none; background: none; font-family: var(--font); font-size: 13px;
       color: var(--gray); cursor: pointer; border-radius: 8px; transition: background 0.1s;
     }
-    .story-menu-item:hover { background: #FEF2F2; color: #DC2626; }
+    .story-menu-item:hover { background: var(--blue-pale); color: var(--blue); }
     .story-card-theme {
       display: inline-block; font-family: var(--font); font-size: 11px; font-weight: 700;
       padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.04em;
@@ -427,6 +468,8 @@ export default function DatingTalesV2() {
     .story-reaction:hover { background: var(--blue-pale); border-color: var(--blue-light); transform: scale(1.05); }
     .story-reaction.active { background: var(--blue-pale); border-color: var(--blue); }
     .reaction-count { font-size: 12px; font-weight: 600; color: var(--gray); font-family: var(--font); }
+    .story-menu-item.share-item:hover { background: var(--blue-pale); color: var(--blue); }
+    .story-menu-item.report-item:hover { background: #FEF2F2; color: #DC2626; }
 
     /* ── Report Modal ── */
     .report-overlay {
@@ -464,6 +507,19 @@ export default function DatingTalesV2() {
       width: 48px; height: 48px; border-radius: 50%; background: #DCFCE7;
       display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #166534;
     }
+
+    /* ── Share Toast ── */
+    .share-toast {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+      background: var(--black); color: white; padding: 14px 24px;
+      border-radius: 12px; font-family: var(--font); font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px; z-index: 300;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
+    }
+    .share-toast svg { width: 16px; height: 16px; stroke: #4ADE80; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
 
     /* ── Submit Section (homepage) ── */
     .submit-section { max-width: 1280px; margin: 0 auto; padding: 0 48px 100px; }
@@ -582,45 +638,134 @@ export default function DatingTalesV2() {
     /* ── Footer ── */
     .footer { max-width: 1280px; margin: 0 auto; padding: 32px 48px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .footer-logo { font-family: var(--font); font-size: 18px; font-weight: 700; color: var(--black); }
+    .footer-email { font-family: var(--font); font-size: 13px; color: var(--gray); text-decoration: none; transition: color 0.2s; }
+    .footer-email:hover { color: var(--blue); }
     .footer-copy { font-family: var(--font); font-size: 13px; color: var(--gray-light); }
 
     /* ── Mobile ── */
     @media (max-width: 768px) {
       .nav { padding: 16px 20px; }
       .nav-link { display: none; }
-      .nav-share { padding: 10px 16px; font-size: 12px; }
-      .hero { grid-template-columns: 1fr; padding: 48px 20px 40px; gap: 40px; }
-      .hero h1 { font-size: 38px; }
-      .hero-cards { height: 400px; }
-      .float-card { width: 240px; padding: 18px; }
-      .float-card.c1 { left: 0; }
-      .float-card.c2 { right: -10px; top: 140px; }
-      .float-card.c3 { left: 20px; }
+      .nav-share { display: none; }
+      .nav-hamburger { display: block; }
+      .mobile-menu {
+        display: flex; flex-direction: column; padding: 8px 20px 16px;
+        border-top: 1px solid var(--border);
+      }
+      .mobile-menu-item {
+        width: 100%; padding: 14px 0; border: none; background: none;
+        font-family: var(--font); font-size: 16px; font-weight: 500;
+        color: var(--gray); cursor: pointer; text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      .mobile-menu-item:last-child { border-bottom: none; }
+      .mobile-menu-item:hover { color: var(--black); }
+      .mobile-menu-item.primary { color: var(--blue); font-weight: 700; }
+
+      .hero { grid-template-columns: 1fr; padding: 40px 20px 32px; gap: 32px; }
+      .hero h1 { font-size: 36px; }
+      .hero-sub { font-size: 16px; margin-bottom: 28px; }
+      .hero-eyebrow { font-size: 12px; padding: 8px 16px; }
+
+      /* Simplify floating cards on mobile — show 2, hide 3rd */
+      .hero-cards { height: 320px; }
+      .float-card { width: 220px; padding: 16px; }
+      .float-card.c1 { left: 0; top: 0; }
+      .float-card.c2 { right: -5px; top: 130px; }
+      .float-card.c3 { display: none; }
+      .fc-title { font-size: 14px; }
+      .fc-text { font-size: 12px; }
+
       .hero-email { flex-direction: column; }
-      .stories-section { padding: 0 20px 64px; }
-      .stories-title { font-size: 26px; }
-      .stories-grid { grid-template-columns: 1fr; }
-      .submit-section { padding: 0 20px 64px; }
-      .submit-inner { grid-template-columns: 1fr; padding: 28px; gap: 24px; }
-      .submit-title { font-size: 24px; }
+      .hero-input { padding: 14px 16px; font-size: 16px; }
+      .hero-btn { padding: 14px; justify-content: center; font-size: 15px; }
+
+      /* Story cards */
+      .stories-section { padding: 0 20px 48px; }
+      .stories-title { font-size: 24px; }
+      .stories-grid { grid-template-columns: 1fr; gap: 16px; }
+      .story-card { padding: 22px; border-radius: 16px; }
+      .story-card:hover { transform: none; box-shadow: none; }
+      .story-card-title { font-size: 18px; }
+      .story-card-text { font-size: 14px; }
+      .story-card-reactions { gap: 6px; flex-wrap: wrap; }
+      .story-reaction { min-width: 40px; height: 40px; font-size: 16px; border-radius: 10px; padding: 0 8px; }
+      .reaction-count { font-size: 11px; }
+
+      /* Submit section */
+      .submit-section { padding: 0 20px 48px; }
+      .submit-inner { grid-template-columns: 1fr; padding: 24px; gap: 20px; border-radius: 20px; }
+      .submit-title { font-size: 22px; }
+      .submit-textarea { min-height: 120px; font-size: 16px; }
+
+      /* How it works */
       .how-section { padding: 48px 20px; }
-      .how-title { font-size: 26px; }
-      .how-grid { grid-template-columns: 1fr; }
-      .cta-section { padding: 64px 20px; }
-      .cta-title { font-size: 30px; }
+      .how-title { font-size: 24px; margin-bottom: 32px; }
+      .how-grid { grid-template-columns: 1fr; gap: 14px; }
+      .how-card { padding: 28px 24px; border-radius: 20px; }
+
+      /* CTA */
+      .cta-section { padding: 48px 20px; }
+      .cta-title { font-size: 28px; }
+      .cta-sub { font-size: 15px; }
       .cta-email { flex-direction: column; }
-      .footer { padding: 24px 20px; flex-direction: column; gap: 12px; }
-      .library-page { padding: 40px 20px 64px; }
-      .library-title { font-size: 30px; }
-      .library-grid { grid-template-columns: 1fr; }
-      .library-filters { gap: 6px; }
-      .library-filter { font-size: 12px; padding: 7px 14px; }
+      .cta-input { padding: 14px 16px; font-size: 16px; }
+      .cta-btn { padding: 14px; font-size: 15px; }
+
+      /* Footer */
+      .footer { padding: 24px 20px; flex-direction: column; gap: 10px; text-align: center; align-items: center; }
+
+      /* Library */
+      .library-page { padding: 32px 20px 64px; }
+      .library-title { font-size: 28px; }
+      .library-sub { font-size: 15px; }
+      .library-grid { grid-template-columns: 1fr; gap: 16px; }
+      .library-filters { gap: 6px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; scrollbar-width: none; }
+      .library-filters::-webkit-scrollbar { display: none; }
+      .library-filter { font-size: 12px; padding: 8px 16px; white-space: nowrap; flex-shrink: 0; }
+      .library-section-title { font-size: 20px; }
+
+      /* Subscribe page */
       .subscribe-page { padding: 48px 20px; }
-      .subscribe-page h1 { font-size: 30px; }
-      .submit-page { padding: 40px 16px; }
-      .submit-page h1 { font-size: 28px; }
-      .submit-page-card { padding: 32px 24px; }
-      .report-modal { margin: 20px; padding: 24px; }
+      .subscribe-page h1 { font-size: 28px; }
+      .subscribe-page-sub { font-size: 15px; }
+      .subscribe-page-input { font-size: 16px; }
+      .subscribe-page-btn { font-size: 16px; }
+
+      /* Submit page */
+      .submit-page { padding: 32px 16px; }
+      .submit-page h1 { font-size: 26px; }
+      .submit-page-card { padding: 28px 20px; border-radius: 0 0 16px 16px; }
+      .submit-page-textarea { min-height: 160px; font-size: 16px; }
+      .submit-page-btn { font-size: 16px; }
+
+      /* Report modal */
+      .report-modal { margin: 16px; padding: 24px; border-radius: 16px; }
+      .report-option { padding: 12px 14px; }
+
+      /* Toast */
+      .share-toast { bottom: 24px; font-size: 13px; padding: 12px 20px; }
+
+      /* Dropdown */
+      .story-menu-dropdown { min-width: 160px; }
+      .story-menu-item { padding: 12px 14px; font-size: 14px; }
+    }
+
+    /* Extra small phones (iPhone SE, etc) */
+    @media (max-width: 380px) {
+      .hero h1 { font-size: 30px; }
+      .hero-cards { height: 280px; }
+      .float-card { width: 190px; padding: 14px; }
+      .story-reaction { min-width: 36px; height: 36px; font-size: 15px; padding: 0 6px; }
+      .cta-title { font-size: 24px; }
+      .library-title { font-size: 24px; }
+      .subscribe-page h1 { font-size: 24px; }
+    }
+
+    /* iOS safe areas */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .footer { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+      .share-toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
     }
   `;
 
@@ -639,8 +784,20 @@ export default function DatingTalesV2() {
             <span className="nav-link" onClick={() => setPage("library")}>Story library</span>
             <span className="nav-link" onClick={() => setPage("subscribe")}>Subscribe</span>
             <button className="nav-share" onClick={() => setPage("submit")}>Share your story</button>
+            <button className="nav-hamburger" onClick={() => setMobileMenu(!mobileMenu)}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                {mobileMenu ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>}
+              </svg>
+            </button>
           </div>
         </nav>
+        {mobileMenu && (
+          <div className="mobile-menu">
+            <button className="mobile-menu-item" onClick={() => setPage("library")}>Story library</button>
+            <button className="mobile-menu-item" onClick={() => setPage("subscribe")}>Subscribe</button>
+            <button className="mobile-menu-item primary" onClick={() => setPage("submit")}>Share your story</button>
+          </div>
+        )}
       </div>
 
       {page === "home" && (<>
@@ -712,12 +869,12 @@ export default function DatingTalesV2() {
         <div className="submit-inner">
           <div>
             <h2 className="submit-title">Got a story?</h2>
-            <p className="submit-sub">Funny, cringey, sweet — we want it all. Your worst date is someone's best Friday read. All stories are anonymous and AI-edited for safety.</p>
+            <p className="submit-sub">Funny, cringey, sweet — we want it all. Your worst date is someone's best Friday read. Write as much as you want — our AI anonymizes and condenses every story.</p>
           </div>
           <div>
             <div className="submit-form-area">
               <textarea className="submit-textarea" placeholder="Tell us your funniest, cringiest, or cutest dating moment…"
-                rows={5} value={storyText} onChange={e => setStoryText(e.target.value.slice(0, 500))} maxLength={500} />
+                rows={5} value={storyText} onChange={e => setStoryText(e.target.value)} />
               <span className={`submit-char-count ${storyText.length > 500 ? "over" : storyText.length > 400 ? "warn" : ""}`}>{storyText.length}/500</span>
             </div>
             <div className="submit-row">
@@ -728,7 +885,7 @@ export default function DatingTalesV2() {
             {submitResult && (
               <div className={`submit-result ${submitResult.type}`}>
                 {submitResult.type === "approved"
-                  ? <div><strong>Your DatingTale is in!</strong> Your tale has been anonymized and queued for this week's drop.</div>
+                  ? <div><strong>Your DatingTale is in!</strong> Our AI has anonymized and condensed your story. It's been queued for review.</div>
                   : <div>{submitResult.message}</div>}
               </div>
             )}
@@ -825,17 +982,17 @@ export default function DatingTalesV2() {
             <p className="submit-page-sub">Your story stays between us (and a few thousand readers).</p>
             <div className="submit-page-form">
               <textarea className="submit-page-textarea" placeholder="Tell us your funniest, cringiest, or cutest dating moment…"
-                value={storyText} onChange={e => setStoryText(e.target.value.slice(0, 500))} maxLength={500} />
+                value={storyText} onChange={e => setStoryText(e.target.value)} />
               <span className={`submit-page-char ${storyText.length > 500 ? "over" : storyText.length > 400 ? "warn" : ""}`}>{storyText.length}/500</span>
             </div>
             <button className="submit-page-btn" onClick={handleSubmitStory} disabled={!storyText.trim() || submitting}>
               {submitting ? <><span className="spinner" /> Our AI is polishing your tale...</> : "Submit story"}
             </button>
-            <p className="submit-page-fine">All stories are anonymized and lightly edited by AI for clarity and safety.</p>
+            <p className="submit-page-fine">All stories are anonymized and condensed by AI to fit our format. Write as much as you want — we'll handle the rest.</p>
             {submitResult && (
               <div className={`submit-page-result ${submitResult.type}`}>
                 {submitResult.type === "approved"
-                  ? <div><strong>Your DatingTale is in!</strong> Your tale has been anonymized and queued for this week's drop. All stories are reviewed before publishing.</div>
+                  ? <div><strong>Your DatingTale is in!</strong> Our AI has anonymized your story and trimmed it to fit. It's been queued for review before going live.</div>
                   : <div>{submitResult.message}</div>}
               </div>
             )}
@@ -846,6 +1003,7 @@ export default function DatingTalesV2() {
       {/* Footer */}
       <footer className="footer">
         <div className="footer-logo">The Dating Tales</div>
+        <a href="mailto:thedatingtales@gmail.com" className="footer-email">thedatingtales@gmail.com</a>
         <div className="footer-copy">© 2026 The Dating Tales. All stories are anonymous.</div>
       </footer>
     </div>
