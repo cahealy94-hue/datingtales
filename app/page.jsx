@@ -156,13 +156,18 @@ export default function DatingTalesV2() {
   const [stories, setStories] = useState(SAMPLE_STORIES);
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState(null);
+  const [editingSubmission, setEditingSubmission] = useState(false);
+  const [editedText, setEditedText] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
   const [storyReactions, setStoryReactions] = useState({});
   const [hiddenStories, setHiddenStories] = useState(new Set());
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const setPage = (p) => {
     setPageState(p);
     setMobileMenu(false);
+    setSearchQuery("");
     const url = p === "home" ? "/" : `/${p}`;
     window.history.pushState({}, "", url);
     window.scrollTo(0, 0);
@@ -175,8 +180,6 @@ export default function DatingTalesV2() {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
-
-  // (Supabase fetch disabled for preview — works in production)
 
   // Fetch published stories from Supabase
   useEffect(() => {
@@ -220,6 +223,8 @@ export default function DatingTalesV2() {
     if (!storyText.trim() || submitting) return;
     setSubmitting(true);
     setSubmitResult(null);
+    setEditingSubmission(false);
+    setEditedText("");
     try {
       const res = await fetch("/api/moderate", {
         method: "POST",
@@ -230,7 +235,7 @@ export default function DatingTalesV2() {
       if (result.status === "rejected") {
         setSubmitResult({ type: "rejected", message: result.reason || "We couldn't publish this one — but we'd love a lighter version!" });
       } else {
-        setSubmitResult({ type: "approved", story: { title: result.title, theme: result.theme, author: result.author, text: result.rewritten } });
+        setSubmitResult({ type: "approved", storyId: result.storyId, story: { title: result.title, theme: result.theme, author: result.author, text: result.rewritten } });
         setStoryText("");
       }
     } catch (err) {
@@ -265,12 +270,78 @@ export default function DatingTalesV2() {
     } catch (err) { console.error("Report error:", err); }
   }, []);
 
+  const handleSaveEdit = useCallback(async () => {
+    if (!editedText.trim() || !submitResult?.storyId) return;
+    setSavingEdit(true);
+    try {
+      await fetch("/api/stories/edit", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storyId: submitResult.storyId, rewritten_text: editedText }),
+      });
+      setSubmitResult(prev => ({ ...prev, story: { ...prev.story, text: editedText } }));
+      setEditingSubmission(false);
+    } catch (err) { console.error("Edit error:", err); }
+    setSavingEdit(false);
+  }, [editedText, submitResult]);
+
+  const startEditSubmission = () => {
+    if (submitResult?.story) {
+      setEditedText(submitResult.story.text);
+      setEditingSubmission(true);
+    }
+  };
+
+  const PencilIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
+
+  const renderSubmissionPreview = () => {
+    if (!submitResult) return null;
+    if (submitResult.type === "rejected") {
+      return <div className="submit-result rejected"><div>{submitResult.message}</div></div>;
+    }
+    const s = submitResult.story;
+    const themeClass = `theme-${s.theme?.toLowerCase().replace(/ /g, "-")}`;
+    return (
+      <div className="submission-preview">
+        <div className="sp-header">
+          <div className="sp-check"><CheckIcon /></div>
+          <div className="sp-header-text">
+            <div className="sp-title-text">Here's your story</div>
+            <div className="sp-subtitle">Submitted for review. If anything looks off, tap the pencil to tweak it.</div>
+          </div>
+        </div>
+        <div className="sp-card">
+          <div className="sp-card-top">
+            <span className={`story-card-theme ${themeClass}`}>{s.theme}</span>
+            {!editingSubmission && (
+              <button className="sp-edit-btn" onClick={startEditSubmission} title="Edit story"><PencilIcon /></button>
+            )}
+          </div>
+          <div className="sp-card-title">{s.title}</div>
+          {editingSubmission ? (
+            <div className="sp-edit-area">
+              <textarea className="sp-edit-textarea" value={editedText} onChange={e => setEditedText(e.target.value)} />
+              <div className="sp-edit-actions">
+                <button className="sp-cancel" onClick={() => setEditingSubmission(false)}>Cancel</button>
+                <button className="sp-save" onClick={handleSaveEdit} disabled={savingEdit}>
+                  {savingEdit ? <><span className="spinner" /> Saving...</> : "Save changes"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="sp-card-text">{s.text}</div>
+          )}
+          <div className="sp-card-persona">— {s.author}</div>
+        </div>
+      </div>
+    );
+  };
+
   // ── Computed ──
   const visibleStories = stories.filter(s => !hiddenStories.has(s.id));
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
   const thisWeekStories = visibleStories.filter(s => s.publishedAt >= weekAgo);
-  const olderStories = visibleStories.filter(s => s.publishedAt < weekAgo);
   const sortByReactions = (arr) => [...arr].sort((a, b) => {
     const totalA = Object.values(a.reactions || {}).reduce((sum, n) => sum + n, 0);
     const totalB = Object.values(b.reactions || {}).reduce((sum, n) => sum + n, 0);
@@ -278,9 +349,15 @@ export default function DatingTalesV2() {
   });
   const homeStories = sortByReactions(thisWeekStories).slice(0, 4);
 
-  const filteredThisWeek = sortByReactions(filter === "All" ? thisWeekStories : thisWeekStories.filter(s => s.theme === filter));
-  const filteredOlderUnsorted = filter === "All" ? olderStories : olderStories.filter(s => s.theme === filter);
-  const filteredOlder = sortByReactions(filteredOlderUnsorted);
+  // Search + theme filter for library
+  const searchFilter = (arr) => {
+    if (!searchQuery.trim()) return arr;
+    const q = searchQuery.toLowerCase();
+    return arr.filter(s => s.title.toLowerCase().includes(q) || s.text.toLowerCase().includes(q) || s.author.toLowerCase().includes(q) || s.theme.toLowerCase().includes(q));
+  };
+  const themeFilter = (arr) => filter === "All" ? arr : arr.filter(s => s.theme === filter);
+  const filteredThisWeek = sortByReactions(searchFilter(themeFilter(thisWeekStories)));
+  const filteredAll = sortByReactions(searchFilter(themeFilter(visibleStories)));
   const allThemes = ["All", ...THEMES];
 
   const css = `
@@ -409,6 +486,16 @@ export default function DatingTalesV2() {
     .fc-text { font-family: var(--font); font-size: 13px; color: var(--gray); line-height: 1.55; margin-bottom: 12px; }
     .fc-reactions { display: flex; gap: 12px; font-family: var(--font); font-size: 12px; color: var(--gray-light); font-weight: 500; }
 
+    /* ── Home sections ordering ── */
+    .home-sections { display: flex; flex-direction: column; }
+    .home-submit { order: 1; }
+    .home-stories { order: 2; }
+
+    @media (min-width: 769px) {
+      .home-submit { order: 2; }
+      .home-stories { order: 1; }
+    }
+
     /* ── Stories ── */
     .stories-section { max-width: 1280px; margin: 0 auto; padding: 0 48px 100px; }
     .stories-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 36px; }
@@ -528,7 +615,7 @@ export default function DatingTalesV2() {
       display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start;
     }
     .submit-title { font-family: var(--font); font-size: 32px; font-weight: 700; color: var(--black); letter-spacing: -0.02em; margin-bottom: 12px; }
-    .submit-sub { font-family: var(--font); font-size: 15px; color: var(--gray); line-height: 1.6; }
+    .submit-sub { font-family: var(--font); font-size: 17px; color: var(--gray); line-height: 1.6; }
     .submit-form-area { position: relative; }
     .submit-textarea {
       width: 100%; padding: 18px; padding-bottom: 36px; border: 2px solid var(--border);
@@ -551,6 +638,53 @@ export default function DatingTalesV2() {
     .submit-result { margin-top: 16px; padding: 16px; border-radius: 12px; font-family: var(--font); font-size: 14px; line-height: 1.5; }
     .submit-result.approved { background: #DCFCE7; color: #166534; }
     .submit-result.rejected { background: #FEF2F2; color: #991B1B; }
+
+    /* ── Submission Preview ── */
+    .submission-preview { margin-top: 20px; }
+    .sp-header {
+      display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;
+    }
+    .sp-check {
+      width: 36px; height: 36px; border-radius: 50%; background: #DCFCE7;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #166534;
+    }
+    .sp-check svg { width: 16px; height: 16px; }
+    .sp-header-text { flex: 1; }
+    .sp-title-text { font-family: var(--font); font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 2px; }
+    .sp-subtitle { font-family: var(--font); font-size: 13px; color: var(--gray); line-height: 1.4; }
+    .sp-card {
+      background: white; border: 1px solid var(--border); border-radius: 16px; padding: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    }
+    .sp-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .sp-edit-btn {
+      background: none; border: none; color: var(--gray-light); cursor: pointer;
+      padding: 6px; border-radius: 8px; transition: all 0.2s; display: flex; align-items: center;
+    }
+    .sp-edit-btn:hover { color: var(--blue); background: var(--blue-pale); }
+    .sp-card-title { font-family: var(--font); font-size: 18px; font-weight: 700; color: var(--black); margin-bottom: 10px; }
+    .sp-card-text { font-family: var(--font); font-size: 14px; color: var(--gray); line-height: 1.6; margin-bottom: 12px; }
+    .sp-card-persona { font-family: var(--font); font-size: 13px; font-weight: 600; font-style: italic; color: var(--blue); }
+    .sp-edit-area { margin-bottom: 12px; }
+    .sp-edit-textarea {
+      width: 100%; padding: 14px; border: 2px solid var(--blue-light); border-radius: 12px;
+      font-size: 14px; font-family: var(--font); color: var(--black);
+      resize: vertical; line-height: 1.5; min-height: 100px; background: var(--blue-pale);
+    }
+    .sp-edit-textarea:focus { outline: none; border-color: var(--blue); }
+    .sp-edit-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+    .sp-cancel {
+      padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border);
+      background: white; font-family: var(--font); font-size: 13px; font-weight: 600;
+      color: var(--gray); cursor: pointer;
+    }
+    .sp-save {
+      padding: 8px 16px; border-radius: 10px; border: none;
+      background: var(--blue); color: white; font-family: var(--font); font-size: 13px;
+      font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;
+    }
+    .sp-save:hover { background: var(--blue-dark); }
+    .sp-save:disabled { opacity: 0.6; cursor: not-allowed; }
     .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
 
     /* ── How it works ── */
@@ -581,6 +715,27 @@ export default function DatingTalesV2() {
     .library-sub { font-family: var(--font); font-size: 17px; color: var(--gray); }
     .library-section-title { font-family: var(--font); font-size: 24px; font-weight: 700; color: var(--black); margin-bottom: 20px; }
     .library-divider { height: 1px; background: var(--border); margin: 48px 0; }
+    .library-search {
+      position: relative; margin-bottom: 16px;
+    }
+    .library-search-icon {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      color: var(--gray-light); pointer-events: none;
+    }
+    .library-search-input {
+      width: 100%; padding: 14px 16px 14px 44px; border: 2px solid var(--border);
+      border-radius: 14px; font-size: 15px; font-family: var(--font);
+      background: white; color: var(--black); transition: border-color 0.2s;
+    }
+    .library-search-input::placeholder { color: var(--gray-light); }
+    .library-search-input:focus { outline: none; border-color: var(--blue); }
+    .library-search-clear {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: var(--border); border: none; width: 20px; height: 20px;
+      border-radius: 50%; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; color: var(--gray); font-size: 12px; padding: 0;
+    }
+    .library-search-clear:hover { background: var(--gray-light); color: white; }
     .library-filters { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
     .library-filter {
       font-family: var(--font); font-size: 13px; font-weight: 600; padding: 8px 18px;
@@ -697,6 +852,9 @@ export default function DatingTalesV2() {
       .submit-inner { grid-template-columns: 1fr; padding: 24px; gap: 20px; border-radius: 20px; }
       .submit-title { font-size: 22px; }
       .submit-textarea { min-height: 120px; font-size: 16px; }
+      .sp-card { padding: 20px; }
+      .sp-card-title { font-size: 16px; }
+      .sp-edit-textarea { font-size: 16px; }
 
       /* How it works */
       .how-section { padding: 48px 20px; }
@@ -720,6 +878,7 @@ export default function DatingTalesV2() {
       .library-title { font-size: 28px; }
       .library-sub { font-size: 15px; }
       .library-grid { grid-template-columns: 1fr; gap: 16px; }
+      .library-search-input { font-size: 16px; padding: 12px 16px 12px 40px; }
       .library-filters { gap: 6px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; scrollbar-width: none; }
       .library-filters::-webkit-scrollbar { display: none; }
       .library-filter { font-size: 12px; padding: 8px 16px; white-space: nowrap; flex-shrink: 0; }
@@ -849,23 +1008,8 @@ export default function DatingTalesV2() {
       </section>
 
       {/* This week's stories */}
-      <div className="stories-section">
-        <div className="stories-header">
-          <div>
-            <div className="stories-title">This week's drop</div>
-            <div className="rainbow-accent" />
-          </div>
-          <span className="stories-link" onClick={() => setPage("library")}>Browse all stories <Arrow /></span>
-        </div>
-        <div className="stories-grid">
-          {homeStories.map((s) => (
-            <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} reacted={storyReactions} />
-          ))}
-        </div>
-      </div>
-
-      {/* Submit (homepage) */}
-      <div className="submit-section">
+      <div className="home-sections">
+      <div className="submit-section home-submit">
         <div className="submit-inner">
           <div>
             <h2 className="submit-title">Got a story?</h2>
@@ -882,15 +1026,25 @@ export default function DatingTalesV2() {
                 {submitting ? <><span className="spinner" /> Processing...</> : <>Submit story <Arrow /></>}
               </button>
             </div>
-            {submitResult && (
-              <div className={`submit-result ${submitResult.type}`}>
-                {submitResult.type === "approved"
-                  ? <div><strong>Your DatingTale is in!</strong> Our AI has anonymized and condensed your story. It's been queued for review.</div>
-                  : <div>{submitResult.message}</div>}
-              </div>
-            )}
+            {renderSubmissionPreview()}
           </div>
         </div>
+      </div>
+
+      <div className="stories-section home-stories">
+        <div className="stories-header">
+          <div>
+            <div className="stories-title">This week's drop</div>
+            <div className="rainbow-accent" />
+          </div>
+          <span className="stories-link" onClick={() => setPage("library")}>Browse all stories <Arrow /></span>
+        </div>
+        <div className="stories-grid">
+          {homeStories.map((s) => (
+            <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} reacted={storyReactions} />
+          ))}
+        </div>
+      </div>
       </div>
 
       {/* How it works */}
@@ -924,31 +1078,35 @@ export default function DatingTalesV2() {
             <h1 className="library-title">Story library</h1>
             <p className="library-sub">Every tale from the dating trenches — all in one place.</p>
           </div>
+          <div className="library-search">
+            <div className="library-search-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <input className="library-search-input" placeholder="Search stories, themes, personas..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            {searchQuery && <button className="library-search-clear" onClick={() => setSearchQuery("")}>✕</button>}
+          </div>
           <div className="library-filters">
             {allThemes.map(t => (
               <button key={t} className={`library-filter ${filter === t ? "active" : ""}`} onClick={() => setFilter(t)}>{t}</button>
             ))}
           </div>
-          {filteredThisWeek.length > 0 && (
+          {!searchQuery && filteredThisWeek.length > 0 && (
             <>
               <div className="library-section-title">This week's drop</div>
               <div className="rainbow-accent" style={{ marginBottom: 20 }} />
               <div className="library-grid">
                 {filteredThisWeek.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} reacted={storyReactions} />)}
               </div>
+              <div className="library-divider" />
             </>
           )}
-          {filteredOlder.length > 0 && (
-            <>
-              {filteredThisWeek.length > 0 && <div className="library-divider" />}
-              <div className="library-section-title">All stories</div>
-              <div className="library-grid">
-                {filteredOlder.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} reacted={storyReactions} />)}
-              </div>
-            </>
-          )}
-          {filteredThisWeek.length === 0 && filteredOlder.length === 0 && (
-            <div className="library-grid"><div className="library-empty">No stories found for this filter.</div></div>
+          <div className="library-section-title">{searchQuery ? `Results for "${searchQuery}"` : "All stories"}</div>
+          {filteredAll.length > 0 ? (
+            <div className="library-grid">
+              {filteredAll.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} reacted={storyReactions} />)}
+            </div>
+          ) : (
+            <div className="library-grid"><div className="library-empty">{searchQuery ? "No stories match your search." : "No stories found for this filter."}</div></div>
           )}
         </div>
       )}
@@ -989,13 +1147,7 @@ export default function DatingTalesV2() {
               {submitting ? <><span className="spinner" /> Our AI is polishing your tale...</> : "Submit story"}
             </button>
             <p className="submit-page-fine">All stories are anonymized and condensed by AI to fit our format. Write as much as you want — we'll handle the rest.</p>
-            {submitResult && (
-              <div className={`submit-page-result ${submitResult.type}`}>
-                {submitResult.type === "approved"
-                  ? <div><strong>Your DatingTale is in!</strong> Our AI has anonymized your story and trimmed it to fit. It's been queued for review before going live.</div>
-                  : <div>{submitResult.message}</div>}
-              </div>
-            )}
+            {renderSubmissionPreview()}
           </div>
         </div>
       )}
