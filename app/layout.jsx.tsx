@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "DatingTales — Anonymous dating stories, delivered every Friday",
-  description: "The funniest, cringiest, and cutest anonymous dating tales — curated and delivered to your inbox weekly.",
+  title: "Date & Tell — Love, Anonymous.",
+  description: "Anonymous dating stories, delivered every Friday. Funny, cringey, sweet. Date & Tell.",
 };
 
 export default function RootLayout({ children }) {
