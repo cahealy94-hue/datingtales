@@ -13,19 +13,83 @@ const ShareIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="no
 
 // ── Fallback Stories ──
 const SAMPLE_STORIES = [
-  { id: 1, title: "The Great Spaghetti Incident", theme: "First Dates", author: "Pasta Enthusiast", text: "Ordered spaghetti on a first date to seem 'cultured.' Twirled too aggressively. Sauce on my forehead, noodle on my chin. He said 'you've got a little something' and gestured at my entire face. We've been together two years now.", publishedAt: "2026-02-07", reactions: { "😂": 89, "❤️": 45, "😬": 23 } },
-  { id: 2, title: "Autocorrect Strikes Again", theme: "Dating App Disasters", author: "Typo Queen", text: "Tried to text my date 'I'm on my way, can't wait!' Autocorrect changed it to 'I'm on my way, can't walk!' He showed up with a wheelchair he borrowed from his grandma.", publishedAt: "2026-02-07", reactions: { "😂": 112, "❤️": 18, "😬": 67 } },
-  { id: 3, title: "The Dog Park Meet-Cute", theme: "Meet Cutes", author: "Golden Retriever Parent", text: "My dog ran full speed into a stranger at the park, knocked his coffee everywhere. I ran over apologizing. He looked at my dog, looked at me, and said 'worth it.' We now share custody of three dogs.", publishedAt: "2026-02-07", reactions: { "❤️": 95, "😂": 34, "✨": 41 } },
-  { id: 4, title: "Mom's Interrogation Protocol", theme: "Meeting the Family", author: "Nervous Wreck", text: "Brought my date to meet my mom. Within five minutes she'd pulled out my baby photos, asked about his credit score, and offered him my grandmother's ring.", publishedAt: "2026-02-07", reactions: { "😂": 72, "😬": 44, "❤️": 12 } },
-  { id: 5, title: "The Label Conversation", theme: "Situationships", author: "Hopeless Romantic", text: "After four months of 'hanging out' I finally asked where we stood. He said 'I really like what we have.' I said 'what do we have?' He said 'this conversation is a great example.'", publishedAt: "2026-01-31", reactions: { "😂": 134, "😬": 89, "💀": 67 } },
-  { id: 6, title: "Wrong Table, Right Person", theme: "Awkward Moments", author: "Latte Lover", text: "Showed up to a blind date at a coffee shop. Sat down across from someone, chatted for ten minutes. Turns out it wasn't my date — just a very friendly stranger. My actual date watched the whole thing from two tables over.", publishedAt: "2026-01-31", reactions: { "❤️": 88, "😂": 56, "✨": 73 } },
-  { id: 7, title: "The Zoom Background Betrayal", theme: "Dating App Disasters", author: "Remote Worker", text: "Had a video date. Used a fancy apartment as my virtual background. Cat jumped on my desk and knocked my laptop, revealing my actual studio apartment with laundry everywhere.", publishedAt: "2026-01-31", reactions: { "😂": 78, "❤️": 22, "😬": 31 } },
-  { id: 8, title: "Uber Driver Played Cupid", theme: "Meet Cutes", author: "Backseat Romantic", text: "Shared a pool ride with a stranger. Driver kept 'accidentally' taking wrong turns to extend the trip. We talked for forty minutes. As we got out, the driver handed us both a receipt that said 'you're welcome.'", publishedAt: "2026-01-31", reactions: { "❤️": 121, "✨": 56, "😂": 43 } },
+  { id: 1, title: "The Great Spaghetti Incident", theme: "First Dates", author: "Pasta Enthusiast", text: "Ordered spaghetti on a first date to seem 'cultured.' Twirled too aggressively. Sauce on my forehead, noodle on my chin. He said 'you've got a little something' and gestured at my entire face. We've been together two years now.", publishedAt: "2026-02-07", reactions: { "😂": 89, "❤️": 45, "😬": 23 }, tags: "spaghetti,pasta,food,dinner,restaurant,italian,messy,embarrassing,funny,sauce,date,first date,cute,together" },
+  { id: 2, title: "Autocorrect Strikes Again", theme: "Dating App Disasters", author: "Typo Queen", text: "Tried to text my date 'I'm on my way, can't wait!' Autocorrect changed it to 'I'm on my way, can't walk!' He showed up with a wheelchair he borrowed from his grandma.", publishedAt: "2026-02-07", reactions: { "😂": 112, "❤️": 18, "😬": 67 } , tags: "texting,text,autocorrect,phone,message,typo,funny,hilarious,wheelchair,grandma,embarrassing,sweet" },
+  { id: 3, title: "The Dog Park Meet-Cute", theme: "Meet Cutes", author: "Golden Retriever Parent", text: "My dog ran full speed into a stranger at the park, knocked his coffee everywhere. I ran over apologizing. He looked at my dog, looked at me, and said 'worth it.' We now share custody of three dogs.", publishedAt: "2026-02-07", reactions: { "❤️": 95, "😂": 34, "✨": 41 } , tags: "dog,dogs,puppy,puppies,pup,pet,park,coffee,cute,sweet,romantic,meet cute,golden retriever,animal" },
+  { id: 4, title: "Mom's Interrogation Protocol", theme: "Meeting the Family", author: "Nervous Wreck", text: "Brought my date to meet my mom. Within five minutes she'd pulled out my baby photos, asked about his credit score, and offered him my grandmother's ring.", publishedAt: "2026-02-07", reactions: { "😂": 72, "😬": 44, "❤️": 12 } , tags: "mom,mother,parent,family,meeting,baby photos,embarrassing,funny,ring,awkward,nervous,interrogation" },
+  { id: 5, title: "The Label Conversation", theme: "Situationships", author: "Hopeless Romantic", text: "After four months of 'hanging out' I finally asked where we stood. He said 'I really like what we have.' I said 'what do we have?' He said 'this conversation is a great example.'", publishedAt: "2026-01-31", reactions: { "😂": 134, "😬": 89, "💀": 67 } , tags: "situationship,relationship,label,define,commitment,hanging out,funny,frustrating,conversation,what are we" },
+  { id: 6, title: "Wrong Table, Right Person", theme: "Awkward Moments", author: "Latte Lover", text: "Showed up to a blind date at a coffee shop. Sat down across from someone, chatted for ten minutes. Turns out it wasn't my date — just a very friendly stranger. My actual date watched the whole thing from two tables over.", publishedAt: "2026-01-31", reactions: { "❤️": 88, "😂": 56, "✨": 73 } , tags: "coffee,cafe,coffee shop,blind date,stranger,awkward,embarrassing,funny,wrong person,mistaken identity" },
+  { id: 7, title: "The Zoom Background Betrayal", theme: "Dating App Disasters", author: "Remote Worker", text: "Had a video date. Used a fancy apartment as my virtual background. Cat jumped on my desk and knocked my laptop, revealing my actual studio apartment with laundry everywhere.", publishedAt: "2026-01-31", reactions: { "😂": 78, "❤️": 22, "😬": 31 } , tags: "zoom,video call,virtual,cat,kitten,pet,apartment,laundry,embarrassing,funny,work from home,background,laptop" },
+  { id: 8, title: "Uber Driver Played Cupid", theme: "Meet Cutes", author: "Backseat Romantic", text: "Shared a pool ride with a stranger. Driver kept 'accidentally' taking wrong turns to extend the trip. We talked for forty minutes. As we got out, the driver handed us both a receipt that said 'you're welcome.'", publishedAt: "2026-01-31", reactions: { "❤️": 121, "✨": 56, "😂": 43 } , tags: "uber,lyft,rideshare,car,driving,stranger,romantic,sweet,cute,meet cute,cupid,funny,ride" },
 ];
 
 const THEMES = ["First Dates", "Meet Cutes", "Dating App Disasters", "Awkward Moments", "Meeting the Family", "Situationships"];
 const EMOJI_OPTIONS = ["😂", "❤️", "😬", "✨", "💀"];
 const REPORT_REASONS = ["Inappropriate or explicit content", "Hate speech or discrimination", "Contains personal information", "Harassment or bullying", "Spam or fake story"];
+
+// ── Synonym Map for Smart Search ──
+const SYNONYM_MAP = {
+  dog: ["puppy", "puppies", "pup", "pups", "doggo", "canine", "pet"],
+  puppy: ["dog", "puppies", "pup", "pups", "doggo", "canine", "pet"],
+  cat: ["kitten", "kitty", "feline", "pet"],
+  kitten: ["cat", "kitty", "feline", "pet"],
+  bar: ["pub", "club", "nightclub", "drinks", "cocktail", "lounge"],
+  club: ["bar", "nightclub", "pub", "lounge", "dancing"],
+  coffee: ["cafe", "latte", "espresso", "starbucks", "tea"],
+  cafe: ["coffee", "latte", "espresso", "coffeeshop"],
+  restaurant: ["dinner", "dining", "food", "meal", "brunch", "lunch"],
+  dinner: ["restaurant", "dining", "food", "meal", "supper"],
+  brunch: ["breakfast", "lunch", "restaurant", "food", "meal"],
+  text: ["texting", "message", "dm", "sms", "chat"],
+  texting: ["text", "message", "dm", "sms", "chat"],
+  phone: ["call", "facetime", "text", "mobile", "cell"],
+  kiss: ["kissing", "makeout", "smooch", "peck"],
+  kissing: ["kiss", "makeout", "smooch"],
+  ex: ["breakup", "ex-boyfriend", "ex-girlfriend", "former", "past"],
+  breakup: ["ex", "split", "dumped", "ended"],
+  crush: ["like", "into", "feelings", "attraction"],
+  tinder: ["bumble", "hinge", "dating app", "swipe", "match"],
+  bumble: ["tinder", "hinge", "dating app", "swipe", "match"],
+  hinge: ["tinder", "bumble", "dating app", "swipe", "match"],
+  awkward: ["cringe", "cringey", "embarrassing", "uncomfortable", "weird"],
+  cringe: ["awkward", "cringey", "embarrassing", "uncomfortable"],
+  embarrassing: ["awkward", "cringe", "mortifying", "humiliating"],
+  funny: ["hilarious", "lol", "comedy", "laugh", "humor"],
+  hilarious: ["funny", "lol", "comedy", "laugh"],
+  sweet: ["cute", "romantic", "adorable", "wholesome", "lovely"],
+  cute: ["sweet", "romantic", "adorable", "wholesome"],
+  romantic: ["sweet", "cute", "love", "romance", "dreamy"],
+  scary: ["terrifying", "creepy", "horror", "frightening", "spooky"],
+  creepy: ["scary", "weird", "uncomfortable", "unsettling"],
+  drunk: ["drinking", "wasted", "tipsy", "hammered", "alcohol", "wine", "beer"],
+  drinking: ["drunk", "alcohol", "wine", "beer", "cocktail", "bar"],
+  car: ["driving", "uber", "lyft", "ride"],
+  movie: ["movies", "film", "theater", "cinema", "netflix"],
+  wedding: ["married", "marriage", "engaged", "engagement", "proposal"],
+  parent: ["parents", "mom", "dad", "mother", "father", "family"],
+  mom: ["mother", "parent", "mama", "family"],
+  dad: ["father", "parent", "papa", "family"],
+  friend: ["friends", "buddy", "bestie", "bff", "pal"],
+  work: ["job", "office", "coworker", "colleague", "boss"],
+  gym: ["workout", "exercise", "fitness", "lifting", "running"],
+  beach: ["ocean", "sea", "swimming", "sand", "surf"],
+  travel: ["trip", "vacation", "flight", "airport", "abroad"],
+  cook: ["cooking", "kitchen", "recipe", "chef", "baking"],
+  hiking: ["hike", "trail", "nature", "outdoors", "walk"],
+  concert: ["music", "show", "gig", "festival", "band"],
+};
+
+function expandSearch(query) {
+  const q = query.toLowerCase().trim();
+  const terms = q.split(/\s+/);
+  const expanded = new Set(terms);
+  terms.forEach(term => {
+    if (SYNONYM_MAP[term]) {
+      SYNONYM_MAP[term].forEach(syn => expanded.add(syn));
+    }
+  });
+  return [...expanded];
+}
 
 // ── Story Card Component ──
 function StoryCard({ story, onReaction, onReport, reacted }) {
@@ -195,6 +259,7 @@ export default function DatingTalesV2() {
             const dbStories = data.map(s => ({
               id: s.id, title: s.title, theme: s.theme, author: s.author_persona,
               text: s.rewritten_text,
+              tags: Array.isArray(s.search_tags) ? s.search_tags : [],
               publishedAt: s.published_at?.split("T")[0] || new Date().toISOString().split("T")[0],
               reactions: {},
             }));
@@ -352,8 +417,12 @@ export default function DatingTalesV2() {
   // Search + theme filter for library
   const searchFilter = (arr) => {
     if (!searchQuery.trim()) return arr;
-    const q = searchQuery.toLowerCase();
-    return arr.filter(s => s.title.toLowerCase().includes(q) || s.text.toLowerCase().includes(q) || s.author.toLowerCase().includes(q) || s.theme.toLowerCase().includes(q));
+    const searchTerms = expandSearch(searchQuery);
+    return arr.filter(s => {
+      const tagStr = Array.isArray(s.tags) ? s.tags.join(" ") : (s.tags || "");
+      const searchable = `${s.title} ${s.text} ${s.author} ${s.theme} ${tagStr}`.toLowerCase();
+      return searchTerms.some(term => searchable.includes(term));
+    });
   };
   const themeFilter = (arr) => filter === "All" ? arr : arr.filter(s => s.theme === filter);
   const filteredThisWeek = sortByReactions(searchFilter(themeFilter(thisWeekStories)));
