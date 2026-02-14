@@ -51,9 +51,10 @@ ALSO GENERATE:
 - A fun, catchy title (max 40 chars). Make it sound like a group chat message, not a newspaper headline.
 - Assign ONE theme from: First Dates, Meet Cutes, Dating App Disasters, Awkward Moments, Meeting the Family, Situationships
 - A fun anonymous persona name like "Pasta Lover" or "Serial Texter" (no city names, no real names, keep it playful)
+- A comma-separated list of 10-20 search tags. These are lowercase keywords someone might search to find this story. Include: key nouns (dog, coffee, restaurant), synonyms (puppy, pup, cafe), emotions (embarrassing, funny, sweet), activities (texting, hiking, cooking), relationship terms (ex, crush, situationship), and general vibes (awkward, romantic, chaotic). Be generous with synonyms.
 
 Respond ONLY with JSON, no markdown fences:
-{"status":"approved","title":"...","theme":"...","author":"...","rewritten":"..."}
+{"status":"approved","title":"...","theme":"...","author":"...","rewritten":"...","tags":"dog,puppy,pup,park,embarrassing,funny,..."}
 
 STORY:
 ${storyText}`
@@ -93,6 +94,7 @@ ${storyText}`
           title: result.title,
           theme: result.theme,
           author_persona: result.author,
+          search_tags: result.tags ? result.tags.split(",").map(t => t.trim()).filter(Boolean) : [],
           status: "pending",
         }),
       });
