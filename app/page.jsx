@@ -79,14 +79,39 @@ const SYNONYM_MAP = {
   concert: ["music", "show", "gig", "festival", "band"],
 };
 
+// Simple stemmer: strips common endings to find root words
+function stem(word) {
+  const w = word.toLowerCase();
+  const roots = new Set([w]);
+  // Strip common suffixes to get variations
+  if (w.endsWith("ing")) roots.add(w.slice(0, -3)).add(w.slice(0, -3) + "e"); // hiking → hik, hike
+  if (w.endsWith("ed")) roots.add(w.slice(0, -2)).add(w.slice(0, -2) + "e"); // liked → lik, like
+  if (w.endsWith("s") && !w.endsWith("ss")) roots.add(w.slice(0, -1)); // dogs → dog
+  if (w.endsWith("es")) roots.add(w.slice(0, -2)); // dishes → dish
+  if (w.endsWith("ies")) roots.add(w.slice(0, -3) + "y"); // puppies → puppy
+  if (w.endsWith("ly")) roots.add(w.slice(0, -2)); // sheepishly → sheepish
+  if (w.endsWith("er")) roots.add(w.slice(0, -2)).add(w.slice(0, -2) + "e"); // hiker → hik, hike
+  // Also generate common forms FROM the root
+  roots.add(w + "s"); roots.add(w + "ing"); roots.add(w + "ed"); roots.add(w + "er");
+  if (w.endsWith("e")) { roots.add(w.slice(0, -1) + "ing"); roots.add(w.slice(0, -1) + "er"); } // hike → hiking, hiker
+  if (w.endsWith("y")) roots.add(w.slice(0, -1) + "ies"); // puppy → puppies
+  return [...roots].filter(r => r.length > 1);
+}
+
 function expandSearch(query) {
   const q = query.toLowerCase().trim();
   const terms = q.split(/\s+/);
-  const expanded = new Set(terms);
+  const expanded = new Set();
   terms.forEach(term => {
-    if (SYNONYM_MAP[term]) {
-      SYNONYM_MAP[term].forEach(syn => expanded.add(syn));
-    }
+    // Add all stemmed variations of the search term
+    const stemmed = stem(term);
+    stemmed.forEach(s => expanded.add(s));
+    // Look up synonyms for each stemmed variation
+    stemmed.forEach(s => {
+      if (SYNONYM_MAP[s]) {
+        SYNONYM_MAP[s].forEach(syn => expanded.add(syn));
+      }
+    });
   });
   return [...expanded];
 }
