@@ -496,7 +496,7 @@ export default function DateAndTell() {
     .nav-logo {
       display: flex; align-items: center; cursor: pointer;
     }
-    .nav-logo-img { height: 24px; width: auto; }
+    .nav-logo-img { height: 40px; width: auto; }
     .nav-right { display: flex; align-items: center; gap: 20px; }
     .nav-link {
       font-family: var(--font); font-size: 14px; font-weight: 500;
