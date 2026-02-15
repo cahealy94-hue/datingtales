@@ -813,7 +813,7 @@ export default function DateAndTell() {
     .library-header { margin-bottom: 40px; }
     .library-title { font-family: var(--font); font-size: 44px; font-weight: 700; color: var(--black); letter-spacing: -0.03em; margin-bottom: 12px; }
     .library-sub { font-family: var(--font); font-size: 17px; color: var(--gray); }
-    .library-section-title { font-family: var(--font); font-size: 24px; font-weight: 700; color: var(--black); margin-bottom: 20px; }
+    .library-section-title { font-family: var(--font); font-size: 30px; font-weight: 700; color: var(--black); margin-bottom: 20px; }
     .library-divider { height: 1px; background: var(--border); margin: 48px 0; }
     .library-search {
       position: relative; margin-bottom: 16px;
@@ -982,7 +982,7 @@ export default function DateAndTell() {
       .library-filters { gap: 6px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; scrollbar-width: none; }
       .library-filters::-webkit-scrollbar { display: none; }
       .library-filter { font-size: 12px; padding: 8px 16px; white-space: nowrap; flex-shrink: 0; }
-      .library-section-title { font-size: 20px; }
+      .library-section-title { font-size: 24px; }
 
       /* Subscribe page */
       .subscribe-page { padding: 48px 20px; }
@@ -1201,6 +1201,7 @@ export default function DateAndTell() {
             </>
           )}
           <div className="library-section-title">{searchQuery ? `Results for "${searchQuery}"` : "All stories"}</div>
+          <div className="rainbow-accent" style={{ marginBottom: 20 }} />
           {filteredAll.length > 0 ? (
             <div className="library-grid">
               {filteredAll.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} reacted={storyReactions} />)}
