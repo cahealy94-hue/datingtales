@@ -494,7 +494,7 @@ export default function DateAndTell() {
       padding: 20px 48px; max-width: 1280px; margin: 0 auto;
     }
     .nav-logo {
-      font-family: 'League Spartan', var(--font); font-size: 22px; font-weight: 800;
+      font-family: 'League Spartan', var(--font); font-size: 28px; font-weight: 800;
       color: var(--black); letter-spacing: -0.03em;
       display: flex; align-items: center; cursor: pointer;
     }
