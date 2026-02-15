@@ -501,7 +501,7 @@ export default function DateAndTell() {
       color: var(--black); letter-spacing: -0.03em;
     }
     .nav-logo-tagline {
-      font-family: var(--font); font-size: 11px; font-weight: 400;
+      font-family: var(--font); font-size: 13px; font-weight: 400;
       color: var(--blue); letter-spacing: 0.02em; font-style: italic;
       margin-top: 1px;
     }
@@ -1070,7 +1070,7 @@ export default function DateAndTell() {
             Real dating stories,<br /><em>told anonymously.</em>
           </h1>
           <p className={`hero-sub ${loaded ? "fade-up d2" : ""}`}>
-            Funny, cringey, sweet. New stories every Friday.
+            Funny, cringey, sweet. New stories every Friday. Because dating is better when we're all in on the joke.
           </p>
           <div className={loaded ? "fade-up d3" : ""}>
             {sub ? (
