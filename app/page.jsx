@@ -10,6 +10,7 @@ const Arrow = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" 
 const CheckIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
 const FlagIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>;
 const ShareIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12l-7-7v4C7 9 4 14 3 19c2.5-3.5 6-5.1 11-5.1V18l7-6z"/></svg>;
+const UserIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
 
 // ── Fallback Stories ──
 const SAMPLE_STORIES = [
@@ -79,22 +80,19 @@ const SYNONYM_MAP = {
   concert: ["music", "show", "gig", "festival", "band"],
 };
 
-// Simple stemmer: strips common endings to find root words
 function stem(word) {
   const w = word.toLowerCase();
   const roots = new Set([w]);
-  // Strip common suffixes to get variations
-  if (w.endsWith("ing")) roots.add(w.slice(0, -3)).add(w.slice(0, -3) + "e"); // hiking → hik, hike
-  if (w.endsWith("ed")) roots.add(w.slice(0, -2)).add(w.slice(0, -2) + "e"); // liked → lik, like
-  if (w.endsWith("s") && !w.endsWith("ss")) roots.add(w.slice(0, -1)); // dogs → dog
-  if (w.endsWith("es")) roots.add(w.slice(0, -2)); // dishes → dish
-  if (w.endsWith("ies")) roots.add(w.slice(0, -3) + "y"); // puppies → puppy
-  if (w.endsWith("ly")) roots.add(w.slice(0, -2)); // sheepishly → sheepish
-  if (w.endsWith("er")) roots.add(w.slice(0, -2)).add(w.slice(0, -2) + "e"); // hiker → hik, hike
-  // Also generate common forms FROM the root
+  if (w.endsWith("ing")) roots.add(w.slice(0, -3)).add(w.slice(0, -3) + "e");
+  if (w.endsWith("ed")) roots.add(w.slice(0, -2)).add(w.slice(0, -2) + "e");
+  if (w.endsWith("s") && !w.endsWith("ss")) roots.add(w.slice(0, -1));
+  if (w.endsWith("es")) roots.add(w.slice(0, -2));
+  if (w.endsWith("ies")) roots.add(w.slice(0, -3) + "y");
+  if (w.endsWith("ly")) roots.add(w.slice(0, -2));
+  if (w.endsWith("er")) roots.add(w.slice(0, -2)).add(w.slice(0, -2) + "e");
   roots.add(w + "s"); roots.add(w + "ing"); roots.add(w + "ed"); roots.add(w + "er");
-  if (w.endsWith("e")) { roots.add(w.slice(0, -1) + "ing"); roots.add(w.slice(0, -1) + "er"); } // hike → hiking, hiker
-  if (w.endsWith("y")) roots.add(w.slice(0, -1) + "ies"); // puppy → puppies
+  if (w.endsWith("e")) { roots.add(w.slice(0, -1) + "ing"); roots.add(w.slice(0, -1) + "er"); }
+  if (w.endsWith("y")) roots.add(w.slice(0, -1) + "ies");
   return [...roots].filter(r => r.length > 1);
 }
 
@@ -103,10 +101,8 @@ function expandSearch(query) {
   const terms = q.split(/\s+/);
   const expanded = new Set();
   terms.forEach(term => {
-    // Add all stemmed variations of the search term
     const stemmed = stem(term);
     stemmed.forEach(s => expanded.add(s));
-    // Look up synonyms for each stemmed variation
     stemmed.forEach(s => {
       if (SYNONYM_MAP[s]) {
         SYNONYM_MAP[s].forEach(syn => expanded.add(syn));
@@ -114,6 +110,45 @@ function expandSearch(query) {
     });
   });
   return [...expanded];
+}
+
+// ── Auth Helpers ──
+function getStoredAuth() {
+  try {
+    const stored = localStorage.getItem("dt_auth");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed.user && parsed.access_token) return parsed;
+    }
+  } catch {}
+  return null;
+}
+
+function storeAuth(authData) {
+  try { localStorage.setItem("dt_auth", JSON.stringify(authData)); } catch {}
+}
+
+function clearAuth() {
+  try { localStorage.removeItem("dt_auth"); } catch {}
+}
+
+function getUnlinkedStoryIds() {
+  try {
+    const ids = JSON.parse(localStorage.getItem("dt_unlinked_stories") || "[]");
+    return Array.isArray(ids) ? ids : [];
+  } catch { return []; }
+}
+
+function addUnlinkedStoryId(id) {
+  try {
+    const ids = getUnlinkedStoryIds();
+    if (!ids.includes(id)) ids.push(id);
+    localStorage.setItem("dt_unlinked_stories", JSON.stringify(ids));
+  } catch {}
+}
+
+function clearUnlinkedStoryIds() {
+  try { localStorage.removeItem("dt_unlinked_stories"); } catch {}
 }
 
 // ── Story Card Component ──
@@ -232,7 +267,7 @@ function StoryCard({ story, onReaction, onReport, reacted }) {
 export default function DateAndTell() {
   const getPageFromPath = () => {
     const path = window.location.pathname.replace(/^\//, "");
-    if (["library", "submit", "subscribe"].includes(path)) return path;
+    if (["library", "submit", "subscribe", "login", "signup", "dashboard"].includes(path)) return path;
     return "home";
   };
 
@@ -255,10 +290,29 @@ export default function DateAndTell() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // ── Auth State ──
+  const [authUser, setAuthUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+  const [dashboardStories, setDashboardStories] = useState([]);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+
+  // Load auth on mount
+  useEffect(() => {
+    const stored = getStoredAuth();
+    if (stored) setAuthUser(stored);
+  }, []);
+
   const setPage = (p) => {
     setPageState(p);
     setMobileMenu(false);
     setSearchQuery("");
+    setAuthError("");
+    setAuthEmail("");
+    setAuthPassword("");
     const url = p === "home" ? "/" : `/${p}`;
     window.history.pushState({}, "", url);
     window.scrollTo(0, 0);
@@ -298,6 +352,115 @@ export default function DateAndTell() {
     fetchPublished();
   }, []);
 
+  // Fetch dashboard stories when on dashboard
+  useEffect(() => {
+    if (page !== "dashboard" || !authUser) return;
+    async function fetchMyStories() {
+      setDashboardLoading(true);
+      try {
+        const res = await fetch("/api/auth/my-stories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: authUser.user.id }),
+        });
+        const data = await res.json();
+        if (data.ok) setDashboardStories(data.stories || []);
+      } catch (err) { console.error("Dashboard fetch error:", err); }
+      setDashboardLoading(false);
+    }
+    fetchMyStories();
+  }, [page, authUser]);
+
+  // ── Auth Handlers ──
+  const handleSignup = useCallback(async () => {
+    if (!authEmail || !authPassword) return;
+    if (authPassword.length < 6) { setAuthError("Password must be at least 6 characters"); return; }
+    setAuthLoading(true);
+    setAuthError("");
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: authEmail, password: authPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setAuthError(data.error || "Signup failed");
+      } else if (data.user && data.session) {
+        const authData = { user: data.user, access_token: data.session.access_token, refresh_token: data.session.refresh_token };
+        storeAuth(authData);
+        setAuthUser(authData);
+
+        // Link any unlinked stories
+        const unlinked = getUnlinkedStoryIds();
+        if (unlinked.length > 0) {
+          try {
+            await fetch("/api/auth/link-story", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ storyIds: unlinked, userId: data.user.id }),
+            });
+            clearUnlinkedStoryIds();
+          } catch (err) { console.error("Link story error:", err); }
+        }
+
+        setPage("dashboard");
+      } else {
+        // Email confirmation required
+        setAuthError("Check your email to confirm your account, then log in.");
+      }
+    } catch (err) {
+      setAuthError("Something went wrong. Please try again.");
+    }
+    setAuthLoading(false);
+  }, [authEmail, authPassword]);
+
+  const handleLogin = useCallback(async () => {
+    if (!authEmail || !authPassword) return;
+    setAuthLoading(true);
+    setAuthError("");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: authEmail, password: authPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setAuthError(data.error || "Login failed");
+      } else {
+        const authData = { user: data.user, access_token: data.access_token, refresh_token: data.refresh_token };
+        storeAuth(authData);
+        setAuthUser(authData);
+
+        // Link any unlinked stories
+        const unlinked = getUnlinkedStoryIds();
+        if (unlinked.length > 0) {
+          try {
+            await fetch("/api/auth/link-story", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ storyIds: unlinked, userId: data.user.id }),
+            });
+            clearUnlinkedStoryIds();
+          } catch (err) { console.error("Link story error:", err); }
+        }
+
+        setPage("dashboard");
+      }
+    } catch (err) {
+      setAuthError("Something went wrong. Please try again.");
+    }
+    setAuthLoading(false);
+  }, [authEmail, authPassword]);
+
+  const handleLogout = () => {
+    clearAuth();
+    setAuthUser(null);
+    setDashboardStories([]);
+    setPage("home");
+  };
+
   // ── Handlers ──
   const handleSubscribe = useCallback(async () => {
     if (!email.includes("@")) return;
@@ -317,11 +480,16 @@ export default function DateAndTell() {
     setSubmitResult(null);
     setEditingSubmission(false);
     setEditedText("");
+    setShowSignupPrompt(false);
     try {
+      const body = { storyText };
+      // If logged in, attach userId
+      if (authUser) body.userId = authUser.user.id;
+
       const res = await fetch("/api/moderate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storyText }),
+        body: JSON.stringify(body),
       });
       const result = await res.json();
       if (result.status === "rejected") {
@@ -329,20 +497,25 @@ export default function DateAndTell() {
       } else {
         setSubmitResult({ type: "approved", storyId: result.storyId, story: { title: result.title, theme: result.theme, author: result.author, text: result.rewritten } });
         setStoryText("");
+
+        // If not logged in, save story ID for later linking
+        if (!authUser && result.storyId) {
+          addUnlinkedStoryId(result.storyId);
+          setShowSignupPrompt(true);
+        }
       }
     } catch (err) {
       console.error("Submit error:", err);
       setSubmitResult({ type: "rejected", message: "Something went wrong. Please try again!" });
     }
     setSubmitting(false);
-  }, [storyText, submitting]);
+  }, [storyText, submitting, authUser]);
 
   const handleReaction = useCallback((storyId, emoji) => {
     const key = `${storyId}-${emoji}`;
     const alreadyReacted = storyReactions[key];
     const action = alreadyReacted ? "remove" : "add";
 
-    // Update local state immediately
     setStoryReactions(prev => {
       const next = { ...prev };
       if (alreadyReacted) { delete next[key]; } else { next[key] = true; }
@@ -357,7 +530,6 @@ export default function DateAndTell() {
       return { ...s, reactions };
     }));
 
-    // Persist to database
     fetch("/api/react", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -443,6 +615,19 @@ export default function DateAndTell() {
           )}
           <div className="sp-card-persona">— {s.author}</div>
         </div>
+
+        {/* Signup prompt after submission */}
+        {showSignupPrompt && !authUser && (
+          <div className="signup-prompt">
+            <div className="signup-prompt-icon">📊</div>
+            <div className="signup-prompt-text">
+              <div className="signup-prompt-title">Want to see how people react?</div>
+              <div className="signup-prompt-sub">Create a free account to track reactions, shares, and more.</div>
+            </div>
+            <button className="signup-prompt-btn" onClick={() => setPage("signup")}>Create account</button>
+            <button className="signup-prompt-dismiss" onClick={() => setShowSignupPrompt(false)}>Maybe later</button>
+          </div>
+        )}
       </div>
     );
   };
@@ -459,7 +644,6 @@ export default function DateAndTell() {
   });
   const homeStories = sortByReactions(thisWeekStories).slice(0, 4);
 
-  // Search + theme filter for library
   const searchFilter = (arr) => {
     if (!searchQuery.trim()) return arr;
     const searchTerms = expandSearch(searchQuery);
@@ -473,6 +657,23 @@ export default function DateAndTell() {
   const filteredThisWeek = sortByReactions(searchFilter(themeFilter(thisWeekStories)));
   const filteredAll = sortByReactions(searchFilter(themeFilter(visibleStories)));
   const allThemes = ["All", ...THEMES];
+
+  // ── Dashboard helpers ──
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "published": return { bg: "#DCFCE7", color: "#166534" };
+      case "pending": return { bg: "#FEF3C7", color: "#92400E" };
+      case "approved": return { bg: "#DBEAFE", color: "#1E40AF" };
+      case "queued": return { bg: "#E0E7FF", color: "#4338CA" };
+      case "rejected": return { bg: "#FEE2E2", color: "#991B1B" };
+      default: return { bg: "#F1F5F9", color: "#475569" };
+    }
+  };
+
+  const getTotalReactions = (reactions) => {
+    if (!reactions || typeof reactions !== "object") return 0;
+    return Object.values(reactions).reduce((sum, n) => sum + n, 0);
+  };
 
   const css = `
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=League+Spartan:wght@700;800;900&display=swap');
@@ -504,102 +705,44 @@ export default function DateAndTell() {
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Nav ── */
-    .nav-wrapper {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(255,255,255,0.9); backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(226,232,240,0.5);
-    }
-    .nav {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 20px 48px; max-width: 1280px; margin: 0 auto;
-    }
-    .nav-logo {
-      display: flex; flex-direction: column; cursor: pointer; line-height: 1;
-    }
-    .nav-logo-text {
-      font-family: 'League Spartan', var(--font); font-size: 34px; font-weight: 800;
-      color: var(--black); letter-spacing: -0.03em;
-    }
-    .nav-logo-tagline {
-      font-family: var(--font); font-size: 13px; font-weight: 400;
-      color: var(--blue); letter-spacing: 0.02em; font-style: italic;
-      margin-top: 1px;
-    }
+    .nav-wrapper { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(226,232,240,0.5); }
+    .nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 48px; max-width: 1280px; margin: 0 auto; }
+    .nav-logo { display: flex; flex-direction: column; cursor: pointer; line-height: 1; }
+    .nav-logo-text { font-family: 'League Spartan', var(--font); font-size: 34px; font-weight: 800; color: var(--black); letter-spacing: -0.03em; }
+    .nav-logo-tagline { font-family: var(--font); font-size: 13px; font-weight: 400; color: var(--blue); letter-spacing: 0.02em; font-style: italic; margin-top: 1px; }
     .nav-right { display: flex; align-items: center; gap: 20px; }
-    .nav-link {
-      font-family: var(--font); font-size: 14px; font-weight: 500;
-      color: var(--gray); cursor: pointer; text-decoration: none; transition: color 0.2s;
-    }
+    .nav-link { font-family: var(--font); font-size: 14px; font-weight: 500; color: var(--gray); cursor: pointer; text-decoration: none; transition: color 0.2s; }
     .nav-link:hover { color: var(--black); }
-    .nav-share {
-      font-family: var(--font); font-size: 14px; font-weight: 600;
-      color: white; background: var(--black); padding: 12px 24px;
-      border-radius: 14px; border: none; cursor: pointer; transition: all 0.2s;
-    }
+    .nav-user-btn { font-family: var(--font); font-size: 14px; font-weight: 500; color: var(--gray); cursor: pointer; display: flex; align-items: center; gap: 6px; background: none; border: 1.5px solid var(--border); padding: 8px 16px; border-radius: 10px; transition: all 0.2s; }
+    .nav-user-btn:hover { border-color: var(--blue-light); color: var(--black); }
+    .nav-share { font-family: var(--font); font-size: 14px; font-weight: 600; color: white; background: var(--black); padding: 12px 24px; border-radius: 14px; border: none; cursor: pointer; transition: all 0.2s; }
     .nav-share:hover { background: #1E293B; }
-    .nav-hamburger {
-      display: none; background: none; border: none; color: var(--black);
-      cursor: pointer; padding: 4px;
-    }
+    .nav-hamburger { display: none; background: none; border: none; color: var(--black); cursor: pointer; padding: 4px; }
     .mobile-menu { display: none; }
 
     /* ── Hero ── */
-    .hero {
-      max-width: 1280px; margin: 0 auto; padding: 80px 48px 100px;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
-    }
-    .hero-eyebrow {
-      display: inline-flex; align-items: center; gap: 8px;
-      font-family: var(--font); font-size: 13px; font-weight: 600;
-      color: var(--blue); margin-bottom: 20px; letter-spacing: 0.01em;
-      background: var(--blue-pale); padding: 10px 20px; border-radius: 100px;
-    }
+    .hero { max-width: 1280px; margin: 0 auto; padding: 80px 48px 100px; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--blue); margin-bottom: 20px; letter-spacing: 0.01em; background: var(--blue-pale); padding: 10px 20px; border-radius: 100px; }
     .eyebrow-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
-    .hero h1 {
-      font-family: var(--font); font-size: 60px; font-weight: 700;
-      line-height: 1.05; letter-spacing: -0.03em; color: var(--black); margin-bottom: 24px;
-    }
+    .hero h1 { font-family: var(--font); font-size: 60px; font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; color: var(--black); margin-bottom: 24px; }
     .hero h1 em { color: var(--blue); font-style: italic; }
     .hero-blue { color: var(--blue); }
-    .hero-sub {
-      font-family: var(--font); font-size: 18px; color: var(--gray);
-      line-height: 1.6; margin-bottom: 36px; font-weight: 400; max-width: 460px;
-    }
+    .hero-sub { font-family: var(--font); font-size: 18px; color: var(--gray); line-height: 1.6; margin-bottom: 36px; font-weight: 400; max-width: 460px; }
     .hero-email { display: flex; gap: 10px; margin-bottom: 20px; }
-    .hero-input {
-      flex: 1; padding: 16px 20px; border: 2px solid var(--border);
-      border-radius: 14px; font-size: 15px; font-family: var(--font);
-      background: white; color: var(--black);
-    }
+    .hero-input { flex: 1; padding: 16px 20px; border: 2px solid var(--border); border-radius: 14px; font-size: 15px; font-family: var(--font); background: white; color: var(--black); }
     .hero-input::placeholder { color: var(--gray-light); }
     .hero-input:focus { outline: none; border-color: var(--blue); }
-    .hero-btn {
-      padding: 16px 32px; background: var(--blue); color: white;
-      border: none; border-radius: 14px; font-size: 15px; font-weight: 600;
-      cursor: pointer; font-family: var(--font); white-space: nowrap;
-      display: flex; align-items: center; gap: 8px; transition: all 0.2s;
-    }
+    .hero-btn { padding: 16px 32px; background: var(--blue); color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font); white-space: nowrap; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
     .hero-btn:hover { background: var(--blue-dark); transform: translateY(-1px); }
-    .hero-subbed {
-      display: flex; align-items: center; gap: 10px; padding: 16px 24px;
-      background: var(--blue-pale); border-radius: 14px; font-size: 15px;
-      font-weight: 600; color: var(--blue-dark); font-family: var(--font);
-    }
+    .hero-subbed { display: flex; align-items: center; gap: 10px; padding: 16px 24px; background: var(--blue-pale); border-radius: 14px; font-size: 15px; font-weight: 600; color: var(--blue-dark); font-family: var(--font); }
 
     /* ── Floating cards ── */
     .hero-cards { position: relative; height: 520px; }
-    .float-card {
-      position: absolute; background: white; border-radius: 20px; padding: 22px; width: 280px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
-      border: 1px solid rgba(0,0,0,0.04);
-    }
+    .float-card { position: absolute; background: white; border-radius: 20px; padding: 22px; width: 280px; box-shadow: 0 8px 30px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.04); }
     .float-card.c1 { top: 0; left: 10px; animation: float1 4s ease-in-out infinite; z-index: 2; }
     .float-card.c2 { top: 180px; right: 0; animation: float2 5s ease-in-out infinite; z-index: 3; }
     .float-card.c3 { bottom: 10px; left: 40px; animation: float3 4.5s ease-in-out infinite; z-index: 1; }
-    .fc-tag {
-      display: inline-block; font-family: var(--font); font-size: 11px; font-weight: 700;
-      padding: 5px 12px; border-radius: 100px; margin-bottom: 12px;
-    }
+    .fc-tag { display: inline-block; font-family: var(--font); font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 100px; margin-bottom: 12px; }
     .c1 .fc-tag { background: var(--blue-light); color: var(--blue-dark); }
     .c2 .fc-tag { background: #DCFCE7; color: #166534; }
     .c3 .fc-tag { background: #F3E8FF; color: #7C3AED; }
@@ -611,53 +754,28 @@ export default function DateAndTell() {
     .home-sections { display: flex; flex-direction: column; }
     .home-submit { order: 1; }
     .home-stories { order: 2; }
-
-    @media (min-width: 769px) {
-      .home-submit { order: 2; }
-      .home-stories { order: 1; }
-    }
+    @media (min-width: 769px) { .home-submit { order: 2; } .home-stories { order: 1; } }
 
     /* ── Stories ── */
     .stories-section { max-width: 1280px; margin: 0 auto; padding: 0 48px 100px; }
     .stories-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 36px; }
     .stories-title { font-family: var(--font); font-size: 36px; font-weight: 700; letter-spacing: -0.02em; color: var(--black); }
     .rainbow-accent { height: 4px; width: 60px; border-radius: 4px; margin-top: 10px; background: linear-gradient(90deg, #EF4444, #F59E0B, #3B82F6, #8B5CF6, #EC4899); }
-    .stories-link {
-      font-family: var(--font); font-size: 14px; font-weight: 600; color: var(--black);
-      cursor: pointer; display: flex; align-items: center; gap: 6px;
-      text-decoration: underline; text-underline-offset: 3px;
-    }
+    .stories-link { font-family: var(--font); font-size: 14px; font-weight: 600; color: var(--black); cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: underline; text-underline-offset: 3px; }
     .stories-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
 
     /* ── Story Card ── */
-    .story-card {
-      background: white; border-radius: 20px; padding: 28px;
-      transition: all 0.3s; border: 1px solid var(--border);
-    }
+    .story-card { background: white; border-radius: 20px; padding: 28px; transition: all 0.3s; border: 1px solid var(--border); }
     .story-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.06); border-color: transparent; }
     .story-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
     .story-card-title { font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--black); line-height: 1.25; }
-    .story-card-dots {
-      color: var(--gray-light); font-size: 18px; cursor: pointer; background: none;
-      border: none; padding: 4px 8px; border-radius: 8px; font-family: var(--font);
-    }
+    .story-card-dots { color: var(--gray-light); font-size: 18px; cursor: pointer; background: none; border: none; padding: 4px 8px; border-radius: 8px; font-family: var(--font); }
     .story-card-dots:hover { background: var(--blue-pale); }
     .story-menu-wrap { position: relative; }
-    .story-menu-dropdown {
-      position: absolute; top: 100%; right: 0; background: white; border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1); border: 1px solid var(--border);
-      padding: 4px; min-width: 180px; z-index: 50;
-    }
-    .story-menu-item {
-      display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 14px;
-      border: none; background: none; font-family: var(--font); font-size: 13px;
-      color: var(--gray); cursor: pointer; border-radius: 8px; transition: background 0.1s;
-    }
+    .story-menu-dropdown { position: absolute; top: 100%; right: 0; background: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); border: 1px solid var(--border); padding: 4px; min-width: 180px; z-index: 50; }
+    .story-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 14px; border: none; background: none; font-family: var(--font); font-size: 13px; color: var(--gray); cursor: pointer; border-radius: 8px; transition: background 0.1s; }
     .story-menu-item:hover { background: var(--blue-pale); color: var(--blue); }
-    .story-card-theme {
-      display: inline-block; font-family: var(--font); font-size: 11px; font-weight: 700;
-      padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.04em;
-    }
+    .story-card-theme { display: inline-block; font-family: var(--font); font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.04em; }
     .theme-first-dates { background: #DCFCE7; color: #166534; }
     .theme-meet-cutes { background: #FEF3C7; color: #92400E; }
     .theme-awkward-moments { background: #F3E8FF; color: #7C3AED; }
@@ -668,11 +786,7 @@ export default function DateAndTell() {
     .story-card-persona { font-family: var(--font); font-size: 14px; font-weight: 600; font-style: italic; color: var(--blue); margin-bottom: 16px; }
     .story-card-divider { height: 1px; background: var(--border); margin-bottom: 16px; }
     .story-card-reactions { display: flex; gap: 8px; }
-    .story-reaction {
-      min-width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--border);
-      background: white; display: flex; align-items: center; justify-content: center; gap: 4px;
-      font-size: 18px; cursor: pointer; transition: all 0.2s; padding: 0 10px;
-    }
+    .story-reaction { min-width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--border); background: white; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 18px; cursor: pointer; transition: all 0.2s; padding: 0 10px; }
     .story-reaction:hover { background: var(--blue-pale); border-color: var(--blue-light); transform: scale(1.05); }
     .story-reaction.active { background: var(--blue-pale); border-color: var(--blue); }
     .reaction-count { font-size: 12px; font-weight: 600; color: var(--gray); font-family: var(--font); }
@@ -680,80 +794,43 @@ export default function DateAndTell() {
     .story-menu-item.report-item:hover { background: #FEF2F2; color: #DC2626; }
 
     /* ── Report Modal ── */
-    .report-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
-      z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px;
-    }
-    .report-modal {
-      background: white; border-radius: 20px; padding: 32px; max-width: 440px; width: 100%;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.15); font-family: var(--font);
-    }
+    .report-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .report-modal { background: white; border-radius: 20px; padding: 32px; max-width: 440px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.15); font-family: var(--font); }
     .report-modal h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--black); }
     .report-sub { font-size: 14px; color: var(--gray); margin-bottom: 20px; }
     .report-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
-    .report-option {
-      display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px;
-      border: 1.5px solid var(--border); background: white; cursor: pointer;
-      font-family: var(--font); font-size: 14px; color: var(--black); transition: all 0.15s;
-    }
+    .report-option { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--border); background: white; cursor: pointer; font-family: var(--font); font-size: 14px; color: var(--black); transition: all 0.15s; }
     .report-option:hover { border-color: var(--blue-light); }
     .report-option.selected { border-color: var(--blue); background: var(--blue-pale); }
     .ro-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; }
     .report-option.selected .ro-radio { border-color: var(--blue); background: var(--blue); box-shadow: inset 0 0 0 3px white; }
     .report-actions { display: flex; gap: 10px; }
-    .report-cancel {
-      flex: 1; padding: 14px; border-radius: 12px; border: 1.5px solid var(--border);
-      background: white; font-family: var(--font); font-size: 14px; font-weight: 600; color: var(--gray); cursor: pointer;
-    }
-    .report-submit {
-      flex: 1; padding: 14px; border-radius: 12px; border: none;
-      background: #EF4444; color: white; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer;
-    }
+    .report-cancel { flex: 1; padding: 14px; border-radius: 12px; border: 1.5px solid var(--border); background: white; font-family: var(--font); font-size: 14px; font-weight: 600; color: var(--gray); cursor: pointer; }
+    .report-submit { flex: 1; padding: 14px; border-radius: 12px; border: none; background: #EF4444; color: white; font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; }
     .report-submit:disabled { opacity: 0.4; cursor: not-allowed; }
     .report-success { text-align: center; }
-    .report-success-icon {
-      width: 48px; height: 48px; border-radius: 50%; background: #DCFCE7;
-      display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #166534;
-    }
+    .report-success-icon { width: 48px; height: 48px; border-radius: 50%; background: #DCFCE7; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #166534; }
 
     /* ── Share Toast ── */
-    .share-toast {
-      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
-      background: var(--black); color: white; padding: 14px 24px;
-      border-radius: 12px; font-family: var(--font); font-size: 14px; font-weight: 600;
-      display: flex; align-items: center; gap: 8px; z-index: 300;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards;
-    }
+    .share-toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: var(--black); color: white; padding: 14px 24px; border-radius: 12px; font-family: var(--font); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; z-index: 300; box-shadow: 0 8px 30px rgba(0,0,0,0.2); animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards; }
     .share-toast svg { width: 16px; height: 16px; stroke: #4ADE80; }
     @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
     @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
 
     /* ── Submit Section (homepage) ── */
     .submit-section { max-width: 1280px; margin: 0 auto; padding: 0 48px 100px; }
-    .submit-inner {
-      background: var(--blue-pale); border-radius: 24px; padding: 48px;
-      display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start;
-    }
+    .submit-inner { background: var(--blue-pale); border-radius: 24px; padding: 48px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start; }
     .submit-title { font-family: var(--font); font-size: 32px; font-weight: 700; color: var(--black); letter-spacing: -0.02em; margin-bottom: 12px; }
     .submit-sub { font-family: var(--font); font-size: 17px; color: var(--gray); line-height: 1.6; }
     .submit-form-area { position: relative; }
-    .submit-textarea {
-      width: 100%; padding: 18px; padding-bottom: 36px; border: 2px solid var(--border);
-      border-radius: 14px; font-size: 15px; font-family: var(--font);
-      background: white; color: var(--black); resize: none; line-height: 1.5; min-height: 140px;
-    }
+    .submit-textarea { width: 100%; padding: 18px; padding-bottom: 36px; border: 2px solid var(--border); border-radius: 14px; font-size: 15px; font-family: var(--font); background: white; color: var(--black); resize: none; line-height: 1.5; min-height: 140px; }
     .submit-char-count { position: absolute; bottom: 14px; right: 16px; font-family: var(--font); font-size: 12px; color: var(--gray-light); }
     .submit-char-count.warn { color: #F59E0B; }
     .submit-char-count.over { color: #EF4444; }
     .submit-textarea::placeholder { color: var(--gray-light); }
     .submit-textarea:focus { outline: none; border-color: var(--blue); }
     .submit-row { display: flex; justify-content: flex-end; align-items: center; margin-top: 12px; }
-    .submit-btn {
-      padding: 14px 28px; background: var(--black); color: white; border: none; border-radius: 14px;
-      font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font);
-      display: flex; align-items: center; gap: 8px; transition: all 0.2s;
-    }
+    .submit-btn { padding: 14px 28px; background: var(--black); color: white; border: none; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
     .submit-btn:hover { background: #1E293B; }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .submit-result { margin-top: 16px; padding: 16px; border-radius: 12px; font-family: var(--font); font-size: 14px; line-height: 1.5; }
@@ -762,51 +839,86 @@ export default function DateAndTell() {
 
     /* ── Submission Preview ── */
     .submission-preview { margin-top: 20px; }
-    .sp-header {
-      display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;
-    }
-    .sp-check {
-      width: 36px; height: 36px; border-radius: 50%; background: #DCFCE7;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #166534;
-    }
+    .sp-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+    .sp-check { width: 36px; height: 36px; border-radius: 50%; background: #DCFCE7; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #166534; }
     .sp-check svg { width: 16px; height: 16px; }
     .sp-header-text { flex: 1; }
     .sp-title-text { font-family: var(--font); font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 2px; }
     .sp-subtitle { font-family: var(--font); font-size: 13px; color: var(--gray); line-height: 1.4; }
-    .sp-card {
-      background: white; border: 1px solid var(--border); border-radius: 16px; padding: 24px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-    }
+    .sp-card { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
     .sp-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .sp-edit-btn {
-      background: none; border: none; color: var(--gray-light); cursor: pointer;
-      padding: 6px; border-radius: 8px; transition: all 0.2s; display: flex; align-items: center;
-    }
+    .sp-edit-btn { background: none; border: none; color: var(--gray-light); cursor: pointer; padding: 6px; border-radius: 8px; transition: all 0.2s; display: flex; align-items: center; }
     .sp-edit-btn:hover { color: var(--blue); background: var(--blue-pale); }
     .sp-card-title { font-family: var(--font); font-size: 18px; font-weight: 700; color: var(--black); margin-bottom: 10px; }
     .sp-card-text { font-family: var(--font); font-size: 14px; color: var(--gray); line-height: 1.6; margin-bottom: 12px; }
     .sp-card-persona { font-family: var(--font); font-size: 13px; font-weight: 600; font-style: italic; color: var(--blue); }
     .sp-edit-area { margin-bottom: 12px; }
-    .sp-edit-textarea {
-      width: 100%; padding: 14px; border: 2px solid var(--blue-light); border-radius: 12px;
-      font-size: 14px; font-family: var(--font); color: var(--black);
-      resize: vertical; line-height: 1.5; min-height: 100px; background: var(--blue-pale);
-    }
+    .sp-edit-textarea { width: 100%; padding: 14px; border: 2px solid var(--blue-light); border-radius: 12px; font-size: 14px; font-family: var(--font); color: var(--black); resize: vertical; line-height: 1.5; min-height: 100px; background: var(--blue-pale); }
     .sp-edit-textarea:focus { outline: none; border-color: var(--blue); }
     .sp-edit-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
-    .sp-cancel {
-      padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border);
-      background: white; font-family: var(--font); font-size: 13px; font-weight: 600;
-      color: var(--gray); cursor: pointer;
-    }
-    .sp-save {
-      padding: 8px 16px; border-radius: 10px; border: none;
-      background: var(--blue); color: white; font-family: var(--font); font-size: 13px;
-      font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;
-    }
+    .sp-cancel { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border); background: white; font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--gray); cursor: pointer; }
+    .sp-save { padding: 8px 16px; border-radius: 10px; border: none; background: var(--blue); color: white; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .sp-save:hover { background: var(--blue-dark); }
     .sp-save:disabled { opacity: 0.6; cursor: not-allowed; }
     .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
+
+    /* ── Signup Prompt (after submission) ── */
+    .signup-prompt { margin-top: 16px; background: var(--blue-pale); border: 1.5px solid var(--blue-light); border-radius: 16px; padding: 24px; text-align: center; }
+    .signup-prompt-icon { font-size: 28px; margin-bottom: 8px; }
+    .signup-prompt-title { font-family: var(--font); font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
+    .signup-prompt-sub { font-family: var(--font); font-size: 13px; color: var(--gray); margin-bottom: 16px; line-height: 1.4; }
+    .signup-prompt-btn { width: 100%; padding: 14px; background: var(--blue); color: white; border: none; border-radius: 12px; font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 8px; transition: background 0.2s; }
+    .signup-prompt-btn:hover { background: var(--blue-dark); }
+    .signup-prompt-dismiss { width: 100%; padding: 10px; background: none; border: none; font-family: var(--font); font-size: 13px; color: var(--gray-light); cursor: pointer; }
+    .signup-prompt-dismiss:hover { color: var(--gray); }
+
+    /* ── Auth Pages (Login / Signup) ── */
+    .auth-page { max-width: 440px; margin: 0 auto; padding: 80px 24px; }
+    .auth-card { background: white; border: 1px solid var(--border); border-radius: 20px; padding: 40px 32px; box-shadow: 0 8px 30px rgba(0,0,0,0.04); }
+    .auth-logo { font-family: 'League Spartan', var(--font); font-size: 28px; font-weight: 800; color: var(--black); letter-spacing: -0.03em; text-align: center; margin-bottom: 8px; }
+    .auth-title { font-family: var(--font); font-size: 24px; font-weight: 700; color: var(--black); text-align: center; margin-bottom: 8px; }
+    .auth-subtitle { font-family: var(--font); font-size: 14px; color: var(--gray); text-align: center; margin-bottom: 28px; line-height: 1.5; }
+    .auth-label { display: block; font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--black); margin-bottom: 6px; }
+    .auth-input { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 15px; font-family: var(--font); color: var(--black); margin-bottom: 16px; }
+    .auth-input::placeholder { color: var(--gray-light); }
+    .auth-input:focus { outline: none; border-color: var(--blue); }
+    .auth-btn { width: 100%; padding: 16px; background: var(--blue); color: white; border: none; border-radius: 12px; font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+    .auth-btn:hover { background: var(--blue-dark); }
+    .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .auth-error { background: #FEF2F2; color: #991B1B; padding: 12px 16px; border-radius: 10px; font-family: var(--font); font-size: 13px; margin-bottom: 16px; line-height: 1.4; }
+    .auth-switch { font-family: var(--font); font-size: 14px; color: var(--gray); text-align: center; }
+    .auth-switch-link { color: var(--blue); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+    .auth-divider { display: flex; align-items: center; gap: 16px; margin: 20px 0; }
+    .auth-divider-line { flex: 1; height: 1px; background: var(--border); }
+    .auth-divider-text { font-family: var(--font); font-size: 12px; color: var(--gray-light); font-weight: 500; }
+
+    /* ── Dashboard ── */
+    .dash-page { max-width: 960px; margin: 0 auto; padding: 60px 48px 100px; }
+    .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 36px; }
+    .dash-title { font-family: var(--font); font-size: 36px; font-weight: 700; color: var(--black); letter-spacing: -0.02em; }
+    .dash-email { font-family: var(--font); font-size: 14px; color: var(--gray); }
+    .dash-logout { font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--gray); background: none; border: 1.5px solid var(--border); padding: 8px 18px; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+    .dash-logout:hover { border-color: #EF4444; color: #EF4444; }
+    .dash-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 36px; }
+    .dash-stat { background: var(--blue-pale); border-radius: 16px; padding: 24px; text-align: center; }
+    .dash-stat-num { font-family: var(--font); font-size: 32px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+    .dash-stat-label { font-family: var(--font); font-size: 13px; color: var(--gray); font-weight: 500; }
+    .dash-section-title { font-family: var(--font); font-size: 24px; font-weight: 700; color: var(--black); margin-bottom: 16px; }
+    .dash-story { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 12px; transition: all 0.2s; }
+    .dash-story:hover { border-color: var(--blue-light); box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+    .dash-story-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .dash-story-title { font-family: var(--font); font-size: 17px; font-weight: 700; color: var(--black); }
+    .dash-story-status { font-family: var(--font); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .dash-story-text { font-family: var(--font); font-size: 14px; color: var(--gray); line-height: 1.6; margin-bottom: 12px; }
+    .dash-story-meta { display: flex; gap: 20px; font-family: var(--font); font-size: 13px; color: var(--gray-light); }
+    .dash-story-meta span { display: flex; align-items: center; gap: 4px; }
+    .dash-empty { text-align: center; padding: 60px 20px; }
+    .dash-empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .dash-empty-title { font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--black); margin-bottom: 8px; }
+    .dash-empty-sub { font-family: var(--font); font-size: 14px; color: var(--gray); margin-bottom: 20px; line-height: 1.5; }
+    .dash-empty-btn { padding: 14px 28px; background: var(--blue); color: white; border: none; border-radius: 12px; font-family: var(--font); font-size: 15px; font-weight: 600; cursor: pointer; }
+    .dash-empty-btn:hover { background: var(--blue-dark); }
+    .dash-loading { text-align: center; padding: 60px; font-family: var(--font); color: var(--gray); }
 
     /* ── How it works ── */
     .how-section { background: var(--blue); padding: 80px 48px; }
@@ -836,33 +948,15 @@ export default function DateAndTell() {
     .library-sub { font-family: var(--font); font-size: 17px; color: var(--gray); }
     .library-section-title { font-family: var(--font); font-size: 30px; font-weight: 700; color: var(--black); margin-bottom: 20px; }
     .library-divider { height: 1px; background: var(--border); margin: 48px 0; }
-    .library-search {
-      position: relative; margin-bottom: 16px;
-    }
-    .library-search-icon {
-      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-      color: var(--gray-light); pointer-events: none;
-    }
-    .library-search-input {
-      width: 100%; padding: 14px 16px 14px 44px; border: 2px solid var(--border);
-      border-radius: 14px; font-size: 15px; font-family: var(--font);
-      background: white; color: var(--black); transition: border-color 0.2s;
-    }
+    .library-search { position: relative; margin-bottom: 16px; }
+    .library-search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--gray-light); pointer-events: none; }
+    .library-search-input { width: 100%; padding: 14px 16px 14px 44px; border: 2px solid var(--border); border-radius: 14px; font-size: 15px; font-family: var(--font); background: white; color: var(--black); transition: border-color 0.2s; }
     .library-search-input::placeholder { color: var(--gray-light); }
     .library-search-input:focus { outline: none; border-color: var(--blue); }
-    .library-search-clear {
-      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-      background: var(--border); border: none; width: 20px; height: 20px;
-      border-radius: 50%; cursor: pointer; display: flex; align-items: center;
-      justify-content: center; color: var(--gray); font-size: 12px; padding: 0;
-    }
+    .library-search-clear { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: var(--border); border: none; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gray); font-size: 12px; padding: 0; }
     .library-search-clear:hover { background: var(--gray-light); color: white; }
     .library-filters { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-    .library-filter {
-      font-family: var(--font); font-size: 13px; font-weight: 600; padding: 8px 18px;
-      border-radius: 100px; border: 1.5px solid var(--border); background: white;
-      color: var(--gray); cursor: pointer; transition: all 0.2s;
-    }
+    .library-filter { font-family: var(--font); font-size: 13px; font-weight: 600; padding: 8px 18px; border-radius: 100px; border: 1.5px solid var(--border); background: white; color: var(--gray); cursor: pointer; transition: all 0.2s; }
     .library-filter:hover { border-color: var(--blue-light); color: var(--black); }
     .library-filter.active { background: var(--blue); color: white; border-color: var(--blue); }
     .library-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
@@ -888,28 +982,21 @@ export default function DateAndTell() {
     .submit-page h1 { font-family: var(--font); font-size: 36px; font-weight: 700; letter-spacing: -0.03em; color: var(--black); margin-bottom: 8px; }
     .submit-page-sub { font-family: var(--font); font-size: 15px; color: var(--gray); margin-bottom: 28px; line-height: 1.5; }
     .submit-page-form { position: relative; margin-bottom: 12px; }
-    .submit-page-textarea {
-      width: 100%; padding: 18px; padding-bottom: 36px; border: 2px solid var(--border);
-      border-radius: 14px; font-size: 15px; font-family: var(--font);
-      background: var(--blue-pale); color: var(--black); resize: vertical; line-height: 1.5; min-height: 180px;
-    }
+    .submit-page-textarea { width: 100%; padding: 18px; padding-bottom: 36px; border: 2px solid var(--border); border-radius: 14px; font-size: 15px; font-family: var(--font); background: var(--blue-pale); color: var(--black); resize: vertical; line-height: 1.5; min-height: 180px; }
     .submit-page-textarea::placeholder { color: var(--gray-light); }
     .submit-page-textarea:focus { outline: none; border-color: var(--blue); }
     .submit-page-char { position: absolute; bottom: 14px; right: 16px; font-family: var(--font); font-size: 12px; color: var(--gray-light); }
     .submit-page-char.warn { color: #F59E0B; }
     .submit-page-char.over { color: #EF4444; }
-    .submit-page-btn {
-      width: 100%; padding: 18px; background: var(--black); color: white; border: none;
-      border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;
-      font-family: var(--font); margin-bottom: 16px; display: flex; align-items: center;
-      justify-content: center; gap: 8px;
-    }
+    .submit-page-btn { width: 100%; padding: 18px; background: var(--black); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: var(--font); margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .submit-page-btn:hover { background: #1E293B; }
     .submit-page-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .submit-page-fine { font-family: var(--font); font-size: 13px; color: var(--gray-light); text-align: center; }
     .submit-page-result { margin-top: 16px; padding: 16px; border-radius: 12px; font-family: var(--font); font-size: 14px; line-height: 1.5; }
     .submit-page-result.approved { background: #DCFCE7; color: #166534; }
     .submit-page-result.rejected { background: #FEF2F2; color: #991B1B; }
+    .submit-login-hint { margin-bottom: 20px; padding: 14px 18px; background: var(--blue-pale); border: 1.5px solid var(--blue-light); border-radius: 12px; font-family: var(--font); font-size: 13px; color: var(--gray); display: flex; align-items: center; justify-content: space-between; }
+    .submit-login-link { color: var(--blue); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 
     /* ── Footer ── */
     .footer { max-width: 1280px; margin: 0 auto; padding: 32px 48px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -923,17 +1010,10 @@ export default function DateAndTell() {
       .nav { padding: 16px 20px; }
       .nav-link { display: none; }
       .nav-share { display: none; }
+      .nav-user-btn { display: none; }
       .nav-hamburger { display: block; }
-      .mobile-menu {
-        display: flex; flex-direction: column; padding: 8px 20px 16px;
-        border-top: 1px solid var(--border);
-      }
-      .mobile-menu-item {
-        width: 100%; padding: 14px 0; border: none; background: none;
-        font-family: var(--font); font-size: 16px; font-weight: 500;
-        color: var(--gray); cursor: pointer; text-align: left;
-        border-bottom: 1px solid var(--border);
-      }
+      .mobile-menu { display: flex; flex-direction: column; padding: 8px 20px 16px; border-top: 1px solid var(--border); }
+      .mobile-menu-item { width: 100%; padding: 14px 0; border: none; background: none; font-family: var(--font); font-size: 16px; font-weight: 500; color: var(--gray); cursor: pointer; text-align: left; border-bottom: 1px solid var(--border); }
       .mobile-menu-item:last-child { border-bottom: none; }
       .mobile-menu-item:hover { color: var(--black); }
       .mobile-menu-item.primary { color: var(--blue); font-weight: 700; }
@@ -942,8 +1022,6 @@ export default function DateAndTell() {
       .hero h1 { font-size: 36px; }
       .hero-sub { font-size: 16px; margin-bottom: 28px; }
       .hero-eyebrow { font-size: 12px; padding: 8px 16px; }
-
-      /* Simplify floating cards on mobile — show 2, hide 3rd */
       .hero-cards { height: 320px; }
       .float-card { width: 220px; padding: 16px; }
       .float-card.c1 { left: 0; top: 0; }
@@ -951,12 +1029,9 @@ export default function DateAndTell() {
       .float-card.c3 { display: none; }
       .fc-title { font-size: 14px; }
       .fc-text { font-size: 12px; }
-
       .hero-email { flex-direction: column; }
       .hero-input { padding: 14px 16px; font-size: 16px; }
       .hero-btn { padding: 14px; justify-content: center; font-size: 15px; }
-
-      /* Story cards */
       .stories-section { padding: 0 20px 48px; }
       .stories-title { font-size: 24px; }
       .stories-grid { grid-template-columns: 1fr; gap: 16px; }
@@ -967,8 +1042,6 @@ export default function DateAndTell() {
       .story-card-reactions { gap: 6px; flex-wrap: wrap; }
       .story-reaction { min-width: 40px; height: 40px; font-size: 16px; border-radius: 10px; padding: 0 8px; }
       .reaction-count { font-size: 11px; }
-
-      /* Submit section */
       .submit-section { padding: 0 20px 48px; }
       .submit-inner { grid-template-columns: 1fr; padding: 24px; gap: 20px; border-radius: 20px; }
       .submit-title { font-size: 22px; }
@@ -976,25 +1049,17 @@ export default function DateAndTell() {
       .sp-card { padding: 20px; }
       .sp-card-title { font-size: 16px; }
       .sp-edit-textarea { font-size: 16px; }
-
-      /* How it works */
       .how-section { padding: 48px 20px; }
       .how-title { font-size: 24px; margin-bottom: 32px; }
       .how-grid { grid-template-columns: 1fr; gap: 14px; }
       .how-card { padding: 28px 24px; border-radius: 20px; }
-
-      /* CTA */
       .cta-section { padding: 48px 20px; }
       .cta-title { font-size: 28px; }
       .cta-sub { font-size: 15px; }
       .cta-email { flex-direction: column; }
       .cta-input { padding: 14px 16px; font-size: 16px; }
       .cta-btn { padding: 14px; font-size: 15px; }
-
-      /* Footer */
       .footer { padding: 24px 20px; flex-direction: column; gap: 10px; text-align: center; align-items: center; }
-
-      /* Library */
       .library-page { padding: 32px 20px 64px; }
       .library-title { font-size: 28px; }
       .library-sub { font-size: 15px; }
@@ -1004,34 +1069,29 @@ export default function DateAndTell() {
       .library-filters::-webkit-scrollbar { display: none; }
       .library-filter { font-size: 12px; padding: 8px 16px; white-space: nowrap; flex-shrink: 0; }
       .library-section-title { font-size: 24px; }
-
-      /* Subscribe page */
       .subscribe-page { padding: 48px 20px; }
       .subscribe-page h1 { font-size: 28px; }
       .subscribe-page-sub { font-size: 15px; }
       .subscribe-page-input { font-size: 16px; }
       .subscribe-page-btn { font-size: 16px; }
-
-      /* Submit page */
       .submit-page { padding: 32px 16px; }
       .submit-page h1 { font-size: 26px; }
       .submit-page-card { padding: 28px 20px; border-radius: 0 0 16px 16px; }
       .submit-page-textarea { min-height: 160px; font-size: 16px; }
       .submit-page-btn { font-size: 16px; }
-
-      /* Report modal */
       .report-modal { margin: 16px; padding: 24px; border-radius: 16px; }
       .report-option { padding: 12px 14px; }
-
-      /* Toast */
       .share-toast { bottom: 24px; font-size: 13px; padding: 12px 20px; }
-
-      /* Dropdown */
       .story-menu-dropdown { min-width: 160px; }
       .story-menu-item { padding: 12px 14px; font-size: 14px; }
+      .auth-page { padding: 48px 20px; }
+      .auth-card { padding: 28px 20px; }
+      .dash-page { padding: 32px 20px 64px; }
+      .dash-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+      .dash-stats { grid-template-columns: 1fr; }
+      .dash-title { font-size: 28px; }
     }
 
-    /* Extra small phones (iPhone SE, etc) */
     @media (max-width: 380px) {
       .hero h1 { font-size: 30px; }
       .hero-cards { height: 280px; }
@@ -1042,7 +1102,6 @@ export default function DateAndTell() {
       .subscribe-page h1 { font-size: 24px; }
     }
 
-    /* iOS safe areas */
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       .footer { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
       .share-toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
@@ -1063,6 +1122,11 @@ export default function DateAndTell() {
           <div className="nav-right">
             <span className="nav-link" onClick={() => setPage("library")}>Story library</span>
             <span className="nav-link" onClick={() => setPage("subscribe")}>Subscribe</span>
+            {authUser ? (
+              <button className="nav-user-btn" onClick={() => setPage("dashboard")}><UserIcon /> My stories</button>
+            ) : (
+              <span className="nav-link" onClick={() => setPage("login")}>Log in</span>
+            )}
             <button className="nav-share" onClick={() => setPage("submit")}>Share your story</button>
             <button className="nav-hamburger" onClick={() => setMobileMenu(!mobileMenu)}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -1075,13 +1139,17 @@ export default function DateAndTell() {
           <div className="mobile-menu">
             <button className="mobile-menu-item" onClick={() => setPage("library")}>Story library</button>
             <button className="mobile-menu-item" onClick={() => setPage("subscribe")}>Subscribe</button>
+            {authUser ? (
+              <button className="mobile-menu-item" onClick={() => setPage("dashboard")}>My stories</button>
+            ) : (
+              <button className="mobile-menu-item" onClick={() => setPage("login")}>Log in</button>
+            )}
             <button className="mobile-menu-item primary" onClick={() => setPage("submit")}>Share your story</button>
           </div>
         )}
       </div>
 
       {page === "home" && (<>
-      {/* Hero */}
       <section className="hero">
         <div>
           <div className={`hero-eyebrow ${loaded ? "fade-up d1" : ""}`}>
@@ -1128,7 +1196,6 @@ export default function DateAndTell() {
         </div>
       </section>
 
-      {/* This week's stories */}
       <div className="home-sections">
       <div className="submit-section home-submit">
         <div className="submit-inner">
@@ -1168,7 +1235,6 @@ export default function DateAndTell() {
       </div>
       </div>
 
-      {/* How it works */}
       <div className="how-section">
         <div className="how-inner">
           <div className="how-title">How it works</div>
@@ -1180,7 +1246,6 @@ export default function DateAndTell() {
         </div>
       </div>
 
-      {/* CTA */}
       <div className="cta-section">
         <div className="cta-title">Your inbox deserves better stories.</div>
         <p className="cta-sub">Bite-sized dating stories from real people, dropping every Friday. Coming soon. Love, Anonymous.</p>
@@ -1260,6 +1325,15 @@ export default function DateAndTell() {
           <div className="submit-page-card">
             <h1>Spill it. Anonymously.</h1>
             <p className="submit-page-sub">Your story stays between us (and a few thousand readers).</p>
+
+            {/* Login hint for non-authenticated users */}
+            {!authUser && (
+              <div className="submit-login-hint">
+                <span>Track your story's reactions</span>
+                <span className="submit-login-link" onClick={() => setPage("login")}>Log in</span>
+              </div>
+            )}
+
             <div className="submit-page-form">
               <textarea className="submit-page-textarea" placeholder="Tell us your funniest, cringiest, or cutest dating moment…"
                 value={storyText} onChange={e => setStoryText(e.target.value)} />
@@ -1272,6 +1346,143 @@ export default function DateAndTell() {
             {renderSubmissionPreview()}
           </div>
         </div>
+      )}
+
+      {/* Login Page */}
+      {page === "login" && (
+        <div className="auth-page">
+          <div className="auth-card">
+            <div className="auth-logo">Date&Tell</div>
+            <div className="auth-title">Welcome back</div>
+            <div className="auth-subtitle">Log in to track your stories and see how people react.</div>
+
+            {authError && <div className="auth-error">{authError}</div>}
+
+            <label className="auth-label">Email</label>
+            <input className="auth-input" type="email" placeholder="name@email.com"
+              value={authEmail} onChange={e => setAuthEmail(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleLogin(); }} />
+
+            <label className="auth-label">Password</label>
+            <input className="auth-input" type="password" placeholder="Your password"
+              value={authPassword} onChange={e => setAuthPassword(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleLogin(); }} />
+
+            <button className="auth-btn" onClick={handleLogin} disabled={authLoading || !authEmail || !authPassword}>
+              {authLoading ? <><span className="spinner" /> Logging in...</> : "Log in"}
+            </button>
+
+            <div className="auth-switch">
+              Don't have an account? <span className="auth-switch-link" onClick={() => setPage("signup")}>Sign up</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Signup Page */}
+      {page === "signup" && (
+        <div className="auth-page">
+          <div className="auth-card">
+            <div className="auth-logo">Date&Tell</div>
+            <div className="auth-title">Create your account</div>
+            <div className="auth-subtitle">Track your stories, see reactions, and know when you go live.</div>
+
+            {authError && <div className="auth-error">{authError}</div>}
+
+            <label className="auth-label">Email</label>
+            <input className="auth-input" type="email" placeholder="name@email.com"
+              value={authEmail} onChange={e => setAuthEmail(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleSignup(); }} />
+
+            <label className="auth-label">Password</label>
+            <input className="auth-input" type="password" placeholder="At least 6 characters"
+              value={authPassword} onChange={e => setAuthPassword(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleSignup(); }} />
+
+            <button className="auth-btn" onClick={handleSignup} disabled={authLoading || !authEmail || !authPassword}>
+              {authLoading ? <><span className="spinner" /> Creating account...</> : "Create account"}
+            </button>
+
+            <div className="auth-switch">
+              Already have an account? <span className="auth-switch-link" onClick={() => setPage("login")}>Log in</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dashboard */}
+      {page === "dashboard" && (
+        authUser ? (
+          <div className="dash-page">
+            <div className="dash-header">
+              <div>
+                <h1 className="dash-title">My stories</h1>
+                <div className="dash-email">{authUser.user.email}</div>
+              </div>
+              <button className="dash-logout" onClick={handleLogout}>Log out</button>
+            </div>
+
+            <div className="dash-stats">
+              <div className="dash-stat">
+                <div className="dash-stat-num">{dashboardStories.length}</div>
+                <div className="dash-stat-label">Stories submitted</div>
+              </div>
+              <div className="dash-stat">
+                <div className="dash-stat-num">{dashboardStories.filter(s => s.status === "published").length}</div>
+                <div className="dash-stat-label">Published</div>
+              </div>
+              <div className="dash-stat">
+                <div className="dash-stat-num">{dashboardStories.reduce((sum, s) => sum + getTotalReactions(s.reactions), 0)}</div>
+                <div className="dash-stat-label">Total reactions</div>
+              </div>
+            </div>
+
+            <div className="dash-section-title">Your stories</div>
+            <div className="rainbow-accent" style={{ marginBottom: 20 }} />
+
+            {dashboardLoading ? (
+              <div className="dash-loading"><span className="spinner" style={{ borderColor: "rgba(0,0,0,0.1)", borderTopColor: "var(--blue)", width: 24, height: 24 }} /></div>
+            ) : dashboardStories.length === 0 ? (
+              <div className="dash-empty">
+                <div className="dash-empty-icon">✍️</div>
+                <div className="dash-empty-title">No stories yet</div>
+                <div className="dash-empty-sub">Share your first dating story and track how people react to it.</div>
+                <button className="dash-empty-btn" onClick={() => setPage("submit")}>Share a story</button>
+              </div>
+            ) : (
+              dashboardStories.map(s => {
+                const statusStyle = getStatusColor(s.status);
+                const totalReactions = getTotalReactions(s.reactions);
+                return (
+                  <div key={s.id} className="dash-story">
+                    <div className="dash-story-top">
+                      <div className="dash-story-title">{s.title || "Untitled"}</div>
+                      <span className="dash-story-status" style={{ background: statusStyle.bg, color: statusStyle.color }}>{s.status}</span>
+                    </div>
+                    <div className="dash-story-text">{s.rewritten_text}</div>
+                    <div className="dash-story-meta">
+                      <span>📊 {totalReactions} reaction{totalReactions !== 1 ? "s" : ""}</span>
+                      <span>🏷️ {s.theme}</span>
+                      <span>📅 {s.submitted_at ? new Date(s.submitted_at).toLocaleDateString() : "—"}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        ) : (
+          <div className="auth-page">
+            <div className="auth-card" style={{ textAlign: "center" }}>
+              <div className="auth-logo">Date&Tell</div>
+              <div className="auth-title">Log in to see your stories</div>
+              <div className="auth-subtitle">Create an account or log in to track your stories and reactions.</div>
+              <button className="auth-btn" onClick={() => setPage("login")}>Log in</button>
+              <div className="auth-switch">
+                Don't have an account? <span className="auth-switch-link" onClick={() => setPage("signup")}>Sign up</span>
+              </div>
+            </div>
+          </div>
+        )
       )}
 
       {/* Footer */}
