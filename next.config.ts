@@ -1,13 +1,13 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+const nextConfig = {
   async rewrites() {
     return [
       { source: '/library', destination: '/' },
       { source: '/submit', destination: '/' },
       { source: '/subscribe', destination: '/' },
+      { source: '/login', destination: '/' },
+      { source: '/signup', destination: '/' },
+      { source: '/dashboard', destination: '/' },
     ];
   },
 };
-
-export default nextConfig;
+module.exports = nextConfig;
