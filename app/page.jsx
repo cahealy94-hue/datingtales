@@ -615,19 +615,6 @@ export default function DateAndTell() {
           )}
           <div className="sp-card-persona">— {s.author}</div>
         </div>
-
-        {/* Signup prompt after submission */}
-        {showSignupPrompt && !authUser && (
-          <div className="signup-prompt">
-            <div className="signup-prompt-icon">📊</div>
-            <div className="signup-prompt-text">
-              <div className="signup-prompt-title">Want to see how people react?</div>
-              <div className="signup-prompt-sub">Create a free account to track reactions, shares, and more.</div>
-            </div>
-            <button className="signup-prompt-btn" onClick={() => setPage("signup")}>Create account</button>
-            <button className="signup-prompt-dismiss" onClick={() => setShowSignupPrompt(false)}>Maybe later</button>
-          </div>
-        )}
       </div>
     );
   };
@@ -862,16 +849,6 @@ export default function DateAndTell() {
     .sp-save:disabled { opacity: 0.6; cursor: not-allowed; }
     .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
 
-    /* ── Signup Prompt (after submission) ── */
-    .signup-prompt { margin-top: 16px; background: var(--blue-pale); border: 1.5px solid var(--blue-light); border-radius: 16px; padding: 24px; text-align: center; }
-    .signup-prompt-icon { font-size: 28px; margin-bottom: 8px; }
-    .signup-prompt-title { font-family: var(--font); font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
-    .signup-prompt-sub { font-family: var(--font); font-size: 13px; color: var(--gray); margin-bottom: 16px; line-height: 1.4; }
-    .signup-prompt-btn { width: 100%; padding: 14px; background: var(--blue); color: white; border: none; border-radius: 12px; font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 8px; transition: background 0.2s; }
-    .signup-prompt-btn:hover { background: var(--blue-dark); }
-    .signup-prompt-dismiss { width: 100%; padding: 10px; background: none; border: none; font-family: var(--font); font-size: 13px; color: var(--gray-light); cursor: pointer; }
-    .signup-prompt-dismiss:hover { color: var(--gray); }
-
     /* ── Auth Pages (Login / Signup) ── */
     .auth-page { max-width: 440px; margin: 0 auto; padding: 80px 24px; }
     .auth-card { background: white; border: 1px solid var(--border); border-radius: 20px; padding: 40px 32px; box-shadow: 0 8px 30px rgba(0,0,0,0.04); }
@@ -992,11 +969,20 @@ export default function DateAndTell() {
     .submit-page-btn:hover { background: #1E293B; }
     .submit-page-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .submit-page-fine { font-family: var(--font); font-size: 13px; color: var(--gray-light); text-align: center; }
+
+    /* ── Post-Submit Inline Signup ── */
+    .post-submit-signup { margin-top: 24px; background: var(--blue-pale); border: 1.5px solid var(--blue-light); border-radius: 16px; padding: 28px 24px; }
+    .post-submit-signup-header { margin-bottom: 20px; }
+    .post-submit-signup-title { font-family: var(--font); font-size: 18px; font-weight: 700; color: var(--black); margin-bottom: 6px; }
+    .post-submit-signup-sub { font-family: var(--font); font-size: 14px; color: var(--gray); line-height: 1.5; }
+    .post-submit-signup .auth-input { background: white; }
+    .post-submit-signup .auth-switch { margin-top: 4px; }
+
+    .submit-another-btn { width: 100%; margin-top: 16px; padding: 14px; background: none; border: 1.5px solid var(--border); border-radius: 12px; font-family: var(--font); font-size: 14px; font-weight: 600; color: var(--gray); cursor: pointer; transition: all 0.2s; }
+    .submit-another-btn:hover { border-color: var(--blue-light); color: var(--black); }
     .submit-page-result { margin-top: 16px; padding: 16px; border-radius: 12px; font-family: var(--font); font-size: 14px; line-height: 1.5; }
     .submit-page-result.approved { background: #DCFCE7; color: #166534; }
     .submit-page-result.rejected { background: #FEF2F2; color: #991B1B; }
-    .submit-login-hint { margin-bottom: 20px; padding: 14px 18px; background: var(--blue-pale); border: 1.5px solid var(--blue-light); border-radius: 12px; font-family: var(--font); font-size: 13px; color: var(--gray); display: flex; align-items: center; justify-content: space-between; }
-    .submit-login-link { color: var(--blue); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 
     /* ── Footer ── */
     .footer { max-width: 1280px; margin: 0 auto; padding: 32px 48px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -1326,24 +1312,59 @@ export default function DateAndTell() {
             <h1>Spill it. Anonymously.</h1>
             <p className="submit-page-sub">Your story stays between us (and a few thousand readers).</p>
 
-            {/* Login hint for non-authenticated users */}
-            {!authUser && (
-              <div className="submit-login-hint">
-                <span>Track your story's reactions</span>
-                <span className="submit-login-link" onClick={() => setPage("login")}>Log in</span>
-              </div>
-            )}
+            {/* Show form if no result yet, otherwise show post-submit flow */}
+            {!submitResult ? (
+              <>
+                <div className="submit-page-form">
+                  <textarea className="submit-page-textarea" placeholder="Tell us your funniest, cringiest, or cutest dating moment…"
+                    value={storyText} onChange={e => setStoryText(e.target.value)} />
+                  <span className={`submit-page-char ${storyText.length > 500 ? "over" : storyText.length > 400 ? "warn" : ""}`}>{storyText.length}/500</span>
+                </div>
+                <button className="submit-page-btn" onClick={handleSubmitStory} disabled={!storyText.trim() || submitting}>
+                  {submitting ? <><span className="spinner" /> Our AI is polishing your story...</> : "Submit story"}
+                </button>
+                <p className="submit-page-fine">All stories are anonymized and condensed by AI to fit our format. Write as much as you want, we'll handle the rest.</p>
+              </>
+            ) : (
+              <>
+                {renderSubmissionPreview()}
 
-            <div className="submit-page-form">
-              <textarea className="submit-page-textarea" placeholder="Tell us your funniest, cringiest, or cutest dating moment…"
-                value={storyText} onChange={e => setStoryText(e.target.value)} />
-              <span className={`submit-page-char ${storyText.length > 500 ? "over" : storyText.length > 400 ? "warn" : ""}`}>{storyText.length}/500</span>
-            </div>
-            <button className="submit-page-btn" onClick={handleSubmitStory} disabled={!storyText.trim() || submitting}>
-              {submitting ? <><span className="spinner" /> Our AI is polishing your story...</> : "Submit story"}
-            </button>
-            <p className="submit-page-fine">All stories are anonymized and condensed by AI to fit our format. Write as much as you want, we'll handle the rest.</p>
-            {renderSubmissionPreview()}
+                {/* Inline signup after submission (only if not logged in) */}
+                {!authUser && submitResult.type === "approved" && (
+                  <div className="post-submit-signup">
+                    <div className="post-submit-signup-header">
+                      <div className="post-submit-signup-title">Save your story to your account</div>
+                      <div className="post-submit-signup-sub">Create a free account to track reactions, shares, and more.</div>
+                    </div>
+
+                    {authError && <div className="auth-error">{authError}</div>}
+
+                    <label className="auth-label">Email</label>
+                    <input className="auth-input" type="email" placeholder="name@email.com"
+                      value={authEmail} onChange={e => setAuthEmail(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter" && authEmail && authPassword) handleSignup(); }} />
+
+                    <label className="auth-label">Password</label>
+                    <input className="auth-input" type="password" placeholder="At least 6 characters"
+                      value={authPassword} onChange={e => setAuthPassword(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter" && authEmail && authPassword) handleSignup(); }} />
+
+                    <button className="auth-btn" onClick={handleSignup} disabled={authLoading || !authEmail || !authPassword}>
+                      {authLoading ? <><span className="spinner" /> Creating account...</> : "Create account"}
+                    </button>
+
+                    <div className="auth-switch">
+                      Already have an account? <span className="auth-switch-link" onClick={() => setPage("login")}>Log in</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit another story — at the bottom */}
+                <button className="submit-another-btn" onClick={() => { setSubmitResult(null); setStoryText(""); setShowSignupPrompt(false); setAuthError(""); }}>
+                  Submit another story
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
