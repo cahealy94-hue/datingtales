@@ -372,6 +372,21 @@ export default function DateAndTell() {
   }, [page, authUser]);
 
   // ── Auth Handlers ──
+  const linkStoriesAndGo = async (userId) => {
+    const unlinked = getUnlinkedStoryIds();
+    if (unlinked.length > 0) {
+      try {
+        await fetch("/api/auth/link-story", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ storyIds: unlinked, userId }),
+        });
+        clearUnlinkedStoryIds();
+      } catch (err) { console.error("Link story error:", err); }
+    }
+    setPage("dashboard");
+  };
+
   const handleSignup = useCallback(async () => {
     if (!authEmail || !authPassword) return;
     if (authPassword.length < 6) { setAuthError("Password must be at least 6 characters"); return; }
@@ -390,24 +405,23 @@ export default function DateAndTell() {
         const authData = { user: data.user, access_token: data.session.access_token, refresh_token: data.session.refresh_token };
         storeAuth(authData);
         setAuthUser(authData);
-
-        // Link any unlinked stories
-        const unlinked = getUnlinkedStoryIds();
-        if (unlinked.length > 0) {
-          try {
-            await fetch("/api/auth/link-story", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ storyIds: unlinked, userId: data.user.id }),
-            });
-            clearUnlinkedStoryIds();
-          } catch (err) { console.error("Link story error:", err); }
+        await linkStoriesAndGo(data.user.id);
+      } else if (data.user) {
+        // No session returned — auto-login with same credentials
+        const loginRes = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: authEmail, password: authPassword }),
+        });
+        const loginData = await loginRes.json();
+        if (loginRes.ok && loginData.user) {
+          const authData = { user: loginData.user, access_token: loginData.access_token, refresh_token: loginData.refresh_token };
+          storeAuth(authData);
+          setAuthUser(authData);
+          await linkStoriesAndGo(loginData.user.id);
+        } else {
+          setAuthError("Account created! Please log in to continue.");
         }
-
-        setPage("dashboard");
-      } else {
-        // Email confirmation required
-        setAuthError("Check your email to confirm your account, then log in.");
       }
     } catch (err) {
       setAuthError("Something went wrong. Please try again.");
@@ -432,21 +446,7 @@ export default function DateAndTell() {
         const authData = { user: data.user, access_token: data.access_token, refresh_token: data.refresh_token };
         storeAuth(authData);
         setAuthUser(authData);
-
-        // Link any unlinked stories
-        const unlinked = getUnlinkedStoryIds();
-        if (unlinked.length > 0) {
-          try {
-            await fetch("/api/auth/link-story", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ storyIds: unlinked, userId: data.user.id }),
-            });
-            clearUnlinkedStoryIds();
-          } catch (err) { console.error("Link story error:", err); }
-        }
-
-        setPage("dashboard");
+        await linkStoriesAndGo(data.user.id);
       }
     } catch (err) {
       setAuthError("Something went wrong. Please try again.");
