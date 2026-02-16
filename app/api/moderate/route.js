@@ -5,6 +5,10 @@ export async function POST(request) {
     return Response.json({ status: "rejected", reason: "No story provided." }, { status: 400 });
   }
 
+  // Vercel provides geolocation headers automatically
+  const city = request.headers.get("x-vercel-ip-city") || "";
+  const country = request.headers.get("x-vercel-ip-country") || "";
+
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://vopnqpulwbofvbyztcta.supabase.co";
   const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -107,6 +111,8 @@ ${storyText}`
           theme: result.theme,
           author_persona: result.author,
           search_tags: result.tags ? result.tags.split(",").map(t => t.trim()).filter(Boolean) : [],
+          city: decodeURIComponent(city),
+          country,
           status: "pending",
         }),
       });
