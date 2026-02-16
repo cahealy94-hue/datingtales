@@ -362,6 +362,8 @@ export default function DateAndTell() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ storyId, emoji, action }),
+    }).then(res => res.json()).then(data => {
+      if (!data.ok) console.error("Reaction API error:", data);
     }).catch(err => console.error("Reaction save error:", err));
   }, [storyReactions]);
 
