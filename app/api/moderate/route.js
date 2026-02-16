@@ -64,7 +64,7 @@ Good: "he pulled out a guitar and serenaded me with a song he 'wrote for me.' It
 The good version keeps their funny comparison, tightens the phrasing, and lets the humor land naturally.
 
 ALSO GENERATE:
-- A fun, catchy title (max 40 chars). Make it sound like a group chat message, not a newspaper headline.
+- A fun, catchy title (max 40 chars). Make it sound like a group chat message, not a newspaper headline. Always capitalize the first letter of every word.
 - Assign ONE theme from: First Dates, Meet Cutes, Dating App Disasters, Awkward Moments, Meeting the Family, Situationships
 - A fun anonymous persona name like "Pasta Lover" or "Serial Texter" (no city names, no real names, keep it playful)
 - A comma-separated list of 10-20 search tags. These are lowercase keywords someone might search to find this story. Include: key nouns (dog, coffee, restaurant), synonyms (puppy, pup, cafe), emotions (embarrassing, funny, sweet), activities (texting, hiking, cooking), relationship terms (ex, crush, situationship), and general vibes (awkward, romantic, chaotic). Be generous with synonyms.
@@ -91,6 +91,11 @@ ${storyText}`
       author: "Anonymous Storyteller",
       rewritten: storyText.slice(0, 500),
     };
+  }
+
+  // ── Capitalize title ──
+  if (result.title) {
+    result.title = result.title.replace(/\b\w/g, c => c.toUpperCase());
   }
 
   // ── Save to Supabase ──
