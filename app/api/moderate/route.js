@@ -28,7 +28,7 @@ export async function POST(request) {
         max_tokens: 1000,
         messages: [{
           role: "user",
-          content: `You are a story editor for Date & Tell, an anonymous dating story platform. Your job is to lightly edit submissions while keeping the original voice intact.
+          content: `You are a story editor for Date&Tell, an anonymous dating story platform. Your job is to lightly edit submissions while keeping the original voice intact.
 
 REJECTION RULES:
 Reject if the story contains: explicit sexual content, hate speech, harassment, illegal activity, defamation, or violent content. If rejecting, respond with: {"status":"rejected","reason":"brief reason"}
@@ -37,60 +37,52 @@ EDITING RULES:
 If acceptable, edit the story following these rules:
 - Keep it under 500 characters
 - Remove any identifying details (real names, specific cities, employers, schools)
-- Replace names with generic terms (e.g., "my date", "they", "he", "she"). But keep celebrity or pop culture references — they add personality and context.
+- Replace names with generic terms (e.g., "my date", "they", "he", "she")
 - Replace specific locations with generalized ones (e.g., "a coffee shop downtown")
-- Remove graphic or explicit sexual language, but keep mildly edgy or suggestive phrasing if it's part of the humor. "Sexual" and "awkward" are fine. Graphic descriptions are not.
-- Keep the original person's voice, but DO shape the story to be more engaging. You're an editor, not a spell-checker. Cut the boring parts, keep the funny parts, and make it land.
-- Keep their best details and comparisons. If they made a funny reference or comparison, that's the gold. Don't strip it out or replace it with something generic.
-- Think of it like retelling your friend's story at a party. You'd keep the best parts, skip the setup no one needs, and make sure the punchline hits.
+- Remove any provocative or explicit language
+- Keep the original person's voice and phrasing as much as possible. Do NOT over-edit. Light touch only.
 
 TONE RULES (CRITICAL):
 - The story should sound like a real person wrote it, not an AI. Read it back and ask: would a 25-year-old actually say this out loud to a friend? If not, rewrite it.
 - Never use em dashes. Use commas, periods, or "and" instead.
 - Never use flowery or poetic language. No "cuddled," "nestled," "blossomed," "ignited a spark," etc.
 - Never exaggerate or embellish what happened. Stick to what the person actually described. If they said the dogs played together, say the dogs played together. Do not say the dogs cuddled.
-- Keep the humor natural. Don't force punchlines or add jokes that weren't in the original.
+- Every story should make the reader smile or laugh. If the original story has a funny moment, sharpen it. Make the delivery punchier, tighten the timing, land it better. But don't add humor that wasn't already there.
+- Don't add sarcasm or humor that changes the meaning of what happened. The punchline should feel like the funniest version of their real story, not a different story.
 - Use casual, conversational language. Short sentences are fine. Fragments are fine.
 - Contractions always (don't, can't, wasn't, etc.)
 - DO NOT clean up the story too much. Keep the messy, raw, imperfect feel. Real stories ramble a little, change direction, and don't wrap up perfectly. That's what makes them good.
 - Never add a moral, lesson, or neat ending. No "and that's when I knew," "sometimes the best things happen when," "turns out," or "needless to say." If the original didn't have a tidy conclusion, don't add one.
-- Don't over-restructure their sentences, but do tighten them. Cut filler that doesn't add personality, keep filler that does. "Like" and "honestly" can stay if they sound natural. "Proceeded to" and "supposedly" should go.
-
-EXAMPLE OF A BAD REWRITE (too literal, just grammar cleanup):
-Original: "he proceeded to pull out a guitar and serenade me with a song that was inspired by me. It was so sexual, like John Mayer's Your body is a wonderland but much worse since he was a stranger!"
-Bad: "he pulled out a guitar to serenade me with a song he said he wrote about me. It was super inappropriate and sexual, like he barely knew me but was singing about my body. So uncomfortable!"
-Good: "he pulled out a guitar and serenaded me with a song he 'wrote for me.' It was giving Your Body Is a Wonderland but like, sir, we met 45 minutes ago."
-
-The good version keeps their funny comparison, tightens the phrasing, and lets the humor land naturally.
+- Keep filler words and casual phrasing if they feel natural. "Like," "honestly," "I mean," "literally" are fine. Don't strip them all out.
+- Don't restructure their sentences to flow better. If they told the story in a slightly jumbled order, keep it that way. That's how people actually talk.
 
 ALSO GENERATE:
 - A fun, catchy title (max 40 chars). Make it sound like a group chat message, not a newspaper headline. Use sentence case (capitalize only the first word, not every word).
 - Assign ONE theme from: First Dates, Meet Cutes, Dating App Disasters, Awkward Moments, Meeting the Family, Situationships
 - A fun anonymous persona name like "Pasta Lover" or "Serial Texter" (no city names, no real names, keep it playful)
-- A comma-separated list of 10-20 search tags. These are lowercase keywords someone might search to find this story. Include: key nouns (dog, coffee, restaurant), synonyms (puppy, pup, cafe), emotions (embarrassing, funny, sweet), activities (texting, hiking, cooking), relationship terms (ex, crush, situationship), and general vibes (awkward, romantic, chaotic). Be generous with synonyms.
+- A comma-separated list of 5-10 searchable tags related to the story content (e.g., "dog, puppy, park, coffee, first date, nervous")
 
 Respond ONLY with JSON, no markdown fences:
-{"status":"approved","title":"...","theme":"...","author":"...","rewritten":"...","tags":"dog,puppy,pup,park,embarrassing,funny,..."}
+{"status":"approved","title":"...","theme":"...","author":"...","rewritten":"...","tags":"..."}
 
 STORY:
 ${storyText}`
-        }]
-      })
+        }],
+      }),
     });
 
     const data = await response.json();
-    const text = data.content?.map(i => i.text || "").join("\n") || "";
-    const clean = text.replace(/```json|```/g, "").trim();
-    result = JSON.parse(clean);
+    const text = data.content?.[0]?.text || "";
+
+    try {
+      result = JSON.parse(text);
+    } catch {
+      console.error("AI response not valid JSON:", text);
+      result = { status: "approved", title: "Untitled", theme: "Awkward Moments", author: "Anonymous", rewritten: storyText.slice(0, 500), tags: "" };
+    }
   } catch (err) {
     console.error("AI moderation error:", err);
-    result = {
-      status: "approved",
-      title: "A Dating Tale",
-      theme: "Awkward Moments",
-      author: "Anonymous Storyteller",
-      rewritten: storyText.slice(0, 500),
-    };
+    result = { status: "approved", title: "Untitled", theme: "Awkward Moments", author: "Anonymous", rewritten: storyText.slice(0, 500), tags: "" };
   }
 
   // ── Capitalize title (sentence case) ──
@@ -99,7 +91,7 @@ ${storyText}`
   }
 
   // ── Save to Supabase ──
-  if (result.status !== "rejected" && SUPABASE_SERVICE_KEY) {
+  if (result.status === "approved") {
     try {
       const saveRes = await fetch(`${SUPABASE_URL}/rest/v1/stories`, {
         method: "POST",
@@ -107,7 +99,7 @@ ${storyText}`
           "Content-Type": "application/json",
           apikey: SUPABASE_SERVICE_KEY,
           Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
-          Prefer: "return=representation",
+          Prefer: "return=minimal",
         },
         body: JSON.stringify({
           original_text: storyText,
@@ -121,9 +113,8 @@ ${storyText}`
           status: "pending",
         }),
       });
-      const saved = await saveRes.json();
-      if (Array.isArray(saved) && saved.length > 0) {
-        result.storyId = saved[0].id;
+      if (!saveRes.ok) {
+        console.error("Supabase save error:", saveRes.status, await saveRes.text());
       }
     } catch (err) {
       console.error("Supabase save error:", err);
