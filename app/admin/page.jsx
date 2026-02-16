@@ -55,12 +55,21 @@ export default function AdminPage() {
 
   const updateStatus = async (id, status) => {
     setActionLoading(id);
-    await fetch("/api/admin/stories", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", "x-admin-password": password },
-      body: JSON.stringify({ id, status }),
-    });
-    setStories(prev => prev.filter(s => s.id !== id));
+    try {
+      const res = await fetch("/api/admin/stories", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-admin-password": password },
+        body: JSON.stringify({ id, status }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setStories(prev => prev.filter(s => s.id !== id));
+      } else {
+        alert(`Failed to update story: ${JSON.stringify(data)}`);
+      }
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
     setActionLoading(null);
   };
 
