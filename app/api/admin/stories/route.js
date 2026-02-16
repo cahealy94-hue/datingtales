@@ -23,16 +23,16 @@ export async function GET(request) {
   } else if (status === "deleted") {
     url = `${SUPABASE_URL}/rest/v1/stories?status=eq.deleted&order=submitted_at.desc`;
   } else {
+    // Works for: pending, approved, queued, published, rejected
     url = `${SUPABASE_URL}/rest/v1/stories?status=eq.${status}&order=submitted_at.desc`;
   }
 
   const res = await fetch(url, {
-      headers: {
-        apikey: getServiceKey(),
-        Authorization: `Bearer ${getServiceKey()}`,
-      },
-    }
-  );
+    headers: {
+      apikey: getServiceKey(),
+      Authorization: `Bearer ${getServiceKey()}`,
+    },
+  });
 
   const stories = await res.json();
 
@@ -93,5 +93,11 @@ export async function PATCH(request) {
     }
   );
 
-  return Response.json({ ok: res.ok });
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("Supabase PATCH error:", res.status, errText);
+    return Response.json({ ok: false, error: errText }, { status: res.status });
+  }
+
+  return Response.json({ ok: true });
 }
