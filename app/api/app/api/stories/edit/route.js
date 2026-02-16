@@ -23,7 +23,7 @@ export async function PATCH(request) {
     return Response.json({ error: "Story not found or not editable" }, { status: 404 });
   }
 
-  // Update the rewritten text
+  // Update the rewritten text and reset to pending for re-review
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/stories?id=eq.${storyId}`,
     {
@@ -34,7 +34,7 @@ export async function PATCH(request) {
         Authorization: `Bearer ${serviceKey}`,
         Prefer: "return=minimal",
       },
-      body: JSON.stringify({ rewritten_text }),
+      body: JSON.stringify({ rewritten_text, status: "pending" }),
     }
   );
 
