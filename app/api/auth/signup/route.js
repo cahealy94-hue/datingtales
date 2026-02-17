@@ -1,7 +1,7 @@
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://vopnqpulwbofvbyztcta.supabase.co";
 
 export async function POST(request) {
-  const { email, password } = await request.json();
+  const { email, password, name } = await request.json();
 
   if (!email || !password) {
     return Response.json({ error: "Email and password required" }, { status: 400 });
@@ -26,6 +26,9 @@ export async function POST(request) {
       email,
       password,
       email_confirm: true,
+      user_metadata: {
+        name: name || "",
+      },
     }),
   });
 
