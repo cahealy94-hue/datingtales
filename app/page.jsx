@@ -267,7 +267,7 @@ function StoryCard({ story, onReaction, onReport, reacted }) {
 export default function DateAndTell() {
   const getPageFromPath = () => {
     const path = window.location.pathname.replace(/^\//, "");
-    if (["library", "submit", "subscribe", "login", "signup", "dashboard"].includes(path)) return path;
+    if (["library", "submit", "subscribe", "login", "signup", "dashboard", "forgot-password", "reset-password"].includes(path)) return path;
     return "home";
   };
 
@@ -300,6 +300,9 @@ export default function DateAndTell() {
   const [dashboardStories, setDashboardStories] = useState([]);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashFilter, setDashFilter] = useState("all");
+  const [resetSent, setResetSent] = useState(false);
+  const [resetToken, setResetToken] = useState(null);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   // Load auth on mount
   useEffect(() => {
@@ -324,6 +327,20 @@ export default function DateAndTell() {
     setPageState(getPageFromPath());
     const onPop = () => setPageState(getPageFromPath());
     window.addEventListener("popstate", onPop);
+
+    // Parse recovery token from Supabase redirect hash
+    if (window.location.pathname === "/reset-password" && window.location.hash) {
+      const params = new URLSearchParams(window.location.hash.substring(1));
+      const token = params.get("access_token");
+      const type = params.get("type");
+      if (token && type === "recovery") {
+        setResetToken(token);
+        setPageState("reset-password");
+        // Clean up the URL
+        window.history.replaceState({}, "", "/reset-password");
+      }
+    }
+
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
@@ -451,6 +468,46 @@ export default function DateAndTell() {
     setDashboardStories([]);
     setPage("home");
   };
+
+  const handleResetRequest = useCallback(async () => {
+    if (!authEmail) return;
+    setAuthLoading(true);
+    setAuthError("");
+    try {
+      await fetch("/api/auth/reset-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: authEmail }),
+      });
+      setResetSent(true);
+    } catch {
+      setAuthError("Something went wrong. Please try again.");
+    }
+    setAuthLoading(false);
+  }, [authEmail]);
+
+  const handleResetPassword = useCallback(async () => {
+    if (!authPassword || !resetToken) return;
+    if (authPassword.length < 6) { setAuthError("Password must be at least 6 characters"); return; }
+    setAuthLoading(true);
+    setAuthError("");
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken: resetToken, newPassword: authPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setAuthError(data.error || "Failed to reset password. The link may have expired.");
+      } else {
+        setResetSuccess(true);
+      }
+    } catch {
+      setAuthError("Something went wrong. Please try again.");
+    }
+    setAuthLoading(false);
+  }, [authPassword, resetToken]);
 
   // ── Handlers ──
   const handleSubscribe = useCallback(async () => {
@@ -868,6 +925,15 @@ export default function DateAndTell() {
     .auth-error { background: #FEF2F2; color: #991B1B; padding: 12px 16px; border-radius: 10px; font-family: var(--font); font-size: 13px; margin-bottom: 16px; line-height: 1.4; }
     .auth-switch { font-family: var(--font); font-size: 14px; color: var(--gray); text-align: center; }
     .auth-switch-link { color: var(--blue); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+    .auth-forgot { font-family: var(--font); font-size: 13px; color: var(--blue); font-weight: 500; cursor: pointer; text-align: right; margin-top: -4px; margin-bottom: 8px; }
+    .auth-forgot:hover { text-decoration: underline; text-underline-offset: 2px; }
+    .auth-success { text-align: center; padding: 20px 0; }
+    .auth-success-icon { font-size: 40px; margin-bottom: 16px; }
+    .auth-success-title { font-family: var(--font); font-size: 22px; font-weight: 700; color: var(--black); margin-bottom: 8px; }
+    .auth-success-sub { font-family: var(--font); font-size: 14px; color: var(--gray); line-height: 1.6; margin-bottom: 24px; }
+    .auth-success-sub strong { color: var(--black); }
+    .auth-btn-secondary { width: 100%; padding: 14px; background: white; border: 1.5px solid var(--border); border-radius: 12px; font-family: var(--font); font-size: 15px; font-weight: 600; color: var(--black); cursor: pointer; transition: all 0.2s; }
+    .auth-btn-secondary:hover { border-color: var(--blue); color: var(--blue); }
     .auth-divider { display: flex; align-items: center; gap: 16px; margin: 20px 0; }
     .auth-divider-line { flex: 1; height: 1px; background: var(--border); }
     .auth-divider-text { font-family: var(--font); font-size: 12px; color: var(--gray-light); font-weight: 500; }
@@ -1449,6 +1515,8 @@ export default function DateAndTell() {
               value={authPassword} onChange={e => setAuthPassword(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") handleLogin(); }} />
 
+            <div className="auth-forgot" onClick={() => { setAuthError(""); setPage("forgot-password"); }}>Forgot password?</div>
+
             <button className="auth-btn" onClick={handleLogin} disabled={authLoading || !authEmail || !authPassword}>
               {authLoading ? <><span className="spinner" /> Logging in...</> : "Log in"}
             </button>
@@ -1486,6 +1554,81 @@ export default function DateAndTell() {
             <div className="auth-switch">
               Already have an account? <span className="auth-switch-link" onClick={() => setPage("login")}>Log in</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Forgot Password Page */}
+      {page === "forgot-password" && (
+        <div className="auth-page">
+          <div className="auth-card">
+            <div className="auth-title">Reset your password</div>
+            <div className="auth-subtitle">Enter your email and we'll send you a link to reset your password.</div>
+
+            {resetSent ? (
+              <div className="auth-success">
+                <div className="auth-success-icon">✉️</div>
+                <div className="auth-success-title">Check your email</div>
+                <div className="auth-success-sub">We sent a reset link to <strong>{authEmail}</strong>. Click the link in the email to set a new password.</div>
+                <button className="auth-btn-secondary" onClick={() => { setResetSent(false); setPage("login"); }}>Back to login</button>
+              </div>
+            ) : (
+              <>
+                {renderAuthError()}
+
+                <label className="auth-label">Email</label>
+                <input className="auth-input" type="email" placeholder="name@email.com"
+                  value={authEmail} onChange={e => setAuthEmail(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") handleResetRequest(); }} />
+
+                <button className="auth-btn" onClick={handleResetRequest} disabled={authLoading || !authEmail}>
+                  {authLoading ? <><span className="spinner" /> Sending...</> : "Send reset link"}
+                </button>
+
+                <div className="auth-switch">
+                  Remember your password? <span className="auth-switch-link" onClick={() => setPage("login")}>Log in</span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Page (from email link) */}
+      {page === "reset-password" && (
+        <div className="auth-page">
+          <div className="auth-card">
+            {resetSuccess ? (
+              <div className="auth-success">
+                <div className="auth-success-icon">✅</div>
+                <div className="auth-success-title">Password updated</div>
+                <div className="auth-success-sub">Your password has been reset. You can now log in with your new password.</div>
+                <button className="auth-btn" onClick={() => { setResetSuccess(false); setResetToken(null); setPage("login"); }}>Log in</button>
+              </div>
+            ) : resetToken ? (
+              <>
+                <div className="auth-title">Set a new password</div>
+                <div className="auth-subtitle">Choose a new password for your account.</div>
+
+                {renderAuthError()}
+
+                <label className="auth-label">New password</label>
+                <input className="auth-input" type="password" placeholder="At least 6 characters"
+                  value={authPassword} onChange={e => setAuthPassword(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") handleResetPassword(); }} />
+
+                <button className="auth-btn" onClick={handleResetPassword} disabled={authLoading || !authPassword}>
+                  {authLoading ? <><span className="spinner" /> Updating...</> : "Update password"}
+                </button>
+              </>
+            ) : (
+              <div className="auth-success">
+                <div className="auth-success-icon">⚠️</div>
+                <div className="auth-success-title">Invalid or expired link</div>
+                <div className="auth-success-sub">This password reset link is no longer valid. Please request a new one.</div>
+                <button className="auth-btn" onClick={() => setPage("forgot-password")}>Request new link</button>
+              </div>
+            )}
           </div>
         </div>
       )}
