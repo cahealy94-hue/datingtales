@@ -1354,7 +1354,7 @@ export default function DateAndTell() {
                     <div className="post-submit-signup-inner">
                     <div className="post-submit-signup-header">
                       <div className="post-submit-signup-title">Save your story to your account</div>
-                      <div className="post-submit-signup-sub">Create a free account to track reactions, shares, and more.</div>
+                      <div className="post-submit-signup-sub">Create a free account to track reactions, shares, and get the best dating stories in your inbox every Friday.</div>
                     </div>
                     {renderAuthError()}
                     <label className="auth-label">Name</label>
@@ -1522,7 +1522,7 @@ export default function DateAndTell() {
                     <div className="post-submit-signup-inner">
                     <div className="post-submit-signup-header">
                       <div className="post-submit-signup-title">Save your story to your account</div>
-                      <div className="post-submit-signup-sub">Create a free account to track reactions, shares, and more.</div>
+                      <div className="post-submit-signup-sub">Create a free account to track reactions, shares, and get the best dating stories in your inbox every Friday.</div>
                     </div>
 
                     {renderAuthError()}
@@ -1599,7 +1599,7 @@ export default function DateAndTell() {
         <div className="auth-page">
           <div className="auth-card">
             <div className="auth-title">Create your account</div>
-            <div className="auth-subtitle">Track your stories, see reactions, and know when you go live.</div>
+            <div className="auth-subtitle">Track your stories, see reactions, and get the best dating stories in your inbox every Friday.</div>
 
             {renderAuthError()}
 
@@ -1745,16 +1745,42 @@ export default function DateAndTell() {
             <div className="rainbow-accent" style={{ marginBottom: 12 }} />
 
             <div className="dash-filters">
-              {["all", "published", "pending"].map(f => (
+              {["all", "published", "pending", "saved"].map(f => (
                 <button key={f} className={`dash-filter ${dashFilter === f ? "active" : ""}`} onClick={() => setDashFilter(f)}>
-                  {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
-                  <span className="dash-filter-count">{f === "all" ? dashboardStories.length : dashboardStories.filter(s => s.status === f).length}</span>
+                  {f === "all" ? "All" : f === "saved" ? "⭐ Saved" : f.charAt(0).toUpperCase() + f.slice(1)}
+                  <span className="dash-filter-count">{f === "all" ? dashboardStories.length : f === "saved" ? savedStories.length : dashboardStories.filter(s => s.status === f).length}</span>
                 </button>
               ))}
             </div>
 
             {dashboardLoading ? (
               <div className="dash-loading"><span className="spinner" style={{ borderColor: "rgba(0,0,0,0.1)", borderTopColor: "var(--blue)", width: 24, height: 24 }} /></div>
+            ) : dashFilter === "saved" ? (
+              (() => {
+                const savedList = stories.filter(s => savedStories.includes(s.id));
+                return savedList.length === 0 ? (
+                  <div className="dash-empty" style={{ padding: "40px 20px" }}>
+                    <div className="dash-empty-icon">⭐</div>
+                    <div className="dash-empty-title">No saved stories yet</div>
+                    <div className="dash-empty-sub">Browse the <span className="auth-switch-link" onClick={() => setPage("library")}>Story library</span> and save your favorites.</div>
+                  </div>
+                ) : savedList.map(s => (
+                  <div key={s.id} className="dash-story">
+                    <div className="dash-story-top">
+                      <div className="dash-story-title">{s.title}</div>
+                      <span className="dash-story-status" style={{ background: "#FFFBEB", color: "#D97706" }}>⭐ saved</span>
+                    </div>
+                    <div className="dash-story-text">{s.text}</div>
+                    <div className="dash-story-meta">
+                      <span>🏷️ {s.theme}</span>
+                      <span>— {s.author}</span>
+                      <span className="dash-share-link" onClick={() => handleSaveStory(s.id)} style={{ color: "#DC2626" }}>
+                        Remove
+                      </span>
+                    </div>
+                  </div>
+                ));
+              })()
             ) : dashboardStories.length === 0 ? (
               <div className="dash-empty">
                 <div className="dash-empty-icon">✍️</div>
@@ -1825,38 +1851,6 @@ export default function DateAndTell() {
                 );
               })
               })()
-            )}
-
-            {/* Saved Stories Section */}
-            {savedStories.length > 0 && (
-              <>
-                <div className="dash-section-title" style={{ marginTop: 40 }}>Saved stories</div>
-                <div className="rainbow-accent" style={{ marginBottom: 20 }} />
-                {stories.filter(s => savedStories.includes(s.id)).map(s => (
-                  <div key={s.id} className="dash-story">
-                    <div className="dash-story-top">
-                      <div className="dash-story-title">{s.title}</div>
-                      <span className="dash-story-status" style={{ background: "#FFFBEB", color: "#D97706" }}>
-                        <StarIcon filled /> saved
-                      </span>
-                    </div>
-                    <div className="dash-story-text">{s.text}</div>
-                    <div className="dash-story-meta">
-                      <span>🏷️ {s.theme}</span>
-                      <span>— {s.author}</span>
-                      <span className="dash-share-link" onClick={() => handleSaveStory(s.id)} style={{ color: "#DC2626" }}>
-                        Remove
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                {stories.filter(s => savedStories.includes(s.id)).length === 0 && (
-                  <div className="dash-empty" style={{ padding: "30px 20px" }}>
-                    <div className="dash-empty-title">Stories you saved are no longer available</div>
-                    <div className="dash-empty-sub">Browse the <span className="auth-switch-link" onClick={() => setPage("library")}>Story library</span> to find more.</div>
-                  </div>
-                )}
-              </>
             )}
           </div>
         ) : (
