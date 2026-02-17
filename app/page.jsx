@@ -10,6 +10,7 @@ const Arrow = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" 
 const CheckIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
 const FlagIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>;
 const ShareIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12l-7-7v4C7 9 4 14 3 19c2.5-3.5 6-5.1 11-5.1V18l7-6z"/></svg>;
+const StarIcon = ({ filled }) => <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? "#F59E0B" : "none"} stroke={filled ? "#F59E0B" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
 const UserIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
 
 // ── Fallback Stories ──
@@ -152,7 +153,7 @@ function clearUnlinkedStoryIds() {
 }
 
 // ── Story Card Component ──
-function StoryCard({ story, onReaction, onReport, reacted }) {
+function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportStep, setReportStep] = useState(null);
   const [selectedReason, setSelectedReason] = useState(null);
@@ -198,6 +199,9 @@ function StoryCard({ story, onReaction, onReport, reacted }) {
               <div className="story-menu-dropdown">
                 <button className="story-menu-item share-item" onClick={() => { setMenuOpen(false); handleShare(); }}>
                   <ShareIcon /> Share Story
+                </button>
+                <button className="story-menu-item save-item" onClick={() => { setMenuOpen(false); onSave?.(story.id); }}>
+                  <StarIcon filled={isSaved} /> {isSaved ? "Saved" : "Save Story"}
                 </button>
                 <button className="story-menu-item report-item" onClick={() => { setMenuOpen(false); setReportStep("select"); }}>
                   <FlagIcon /> Report Story
@@ -280,6 +284,9 @@ export default function DateAndTell() {
   const [page, setPageState] = useState("home");
   const [filter, setFilter] = useState("All");
   const [stories, setStories] = useState(SAMPLE_STORIES);
+  const [savedStories, setSavedStories] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("dt_saved_stories") || "[]"); } catch { return []; }
+  });
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState(null);
   const [editingSubmission, setEditingSubmission] = useState(false);
@@ -321,6 +328,7 @@ export default function DateAndTell() {
     setAuthError("");
     setAuthEmail("");
     setAuthPassword("");
+    setAuthName("");
     const url = p === "home" ? "/" : `/${p}`;
     window.history.pushState({}, "", url);
     window.scrollTo(0, 0);
@@ -568,12 +576,14 @@ export default function DateAndTell() {
             const el = document.getElementById("post-submit-signup");
             if (el) {
               const rect = el.getBoundingClientRect();
-              const peekAmount = 120; // Show rainbow bar + title
-              if (rect.top > window.innerHeight) {
-                window.scrollTo({ top: window.pageYOffset + (rect.top - window.innerHeight + peekAmount), behavior: "smooth" });
+              const peekAmount = 140; // Show rainbow bar + title + subtitle
+              // Scroll if the signup card top is below the visible area
+              if (rect.top > window.innerHeight - 40) {
+                const scrollTarget = window.pageYOffset + rect.top - window.innerHeight + peekAmount;
+                window.scrollTo({ top: scrollTarget, behavior: "smooth" });
               }
             }
-          }, 2000);
+          }, 2500);
         }
       }
     } catch (err) {
@@ -622,6 +632,14 @@ export default function DateAndTell() {
       const data = await res.json();
       if (data.deleted) setStories(s => s.filter(story => story.id !== storyId));
     } catch (err) { console.error("Report error:", err); }
+  }, []);
+
+  const handleSaveStory = useCallback((storyId) => {
+    setSavedStories(prev => {
+      const updated = prev.includes(storyId) ? prev.filter(id => id !== storyId) : [...prev, storyId];
+      try { localStorage.setItem("dt_saved_stories", JSON.stringify(updated)); } catch {}
+      return updated;
+    });
   }, []);
 
   const handleSaveEdit = useCallback(async () => {
@@ -863,6 +881,7 @@ export default function DateAndTell() {
     .story-reaction.active { background: var(--blue-pale); border-color: var(--blue); }
     .reaction-count { font-size: 12px; font-weight: 600; color: var(--gray); font-family: var(--font); }
     .story-menu-item.share-item:hover { background: var(--blue-pale); color: var(--blue); }
+    .story-menu-item.save-item:hover { background: #FFFBEB; color: #D97706; }
     .story-menu-item.report-item:hover { background: #FEF2F2; color: #DC2626; }
 
     /* ── Report Modal ── */
@@ -1112,7 +1131,7 @@ export default function DateAndTell() {
       .nav-share { display: none; }
       .nav-user-btn { display: none; }
       .nav-hamburger { display: block; }
-      .mobile-menu { display: flex; flex-direction: column; padding: 8px 20px 16px; border-top: 1px solid var(--border); }
+      .mobile-menu { display: flex; flex-direction: column; padding: 8px 20px 16px; border-top: 1px solid var(--border); position: absolute; top: 100%; left: 0; right: 0; background: white; z-index: 999; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
       .mobile-menu-item { width: 100%; padding: 14px 0; border: none; background: none; font-family: var(--font); font-size: 16px; font-weight: 500; color: var(--gray); cursor: pointer; text-align: left; border-bottom: 1px solid var(--border); }
       .mobile-menu-item:last-child { border-bottom: none; }
       .mobile-menu-item:hover { color: var(--black); }
@@ -1186,9 +1205,13 @@ export default function DateAndTell() {
       .story-menu-item { padding: 12px 14px; font-size: 14px; }
       .auth-page { padding: 48px 20px; }
       .auth-card { padding: 28px 20px; }
+      .auth-input { font-size: 16px; }
       .dash-page { padding: 32px 20px 64px; }
-      .dash-header { flex-direction: column; gap: 12px; align-items: flex-start; }
-      .dash-stats { grid-template-columns: 1fr; }
+      .dash-header { flex-direction: row; gap: 0; align-items: center; }
+      .dash-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .dash-stat { padding: 16px 8px; }
+      .dash-stat-num { font-size: 22px; }
+      .dash-stat-label { font-size: 11px; }
       .dash-filters { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
       .dash-filter { white-space: nowrap; flex-shrink: 0; }
       .dash-title { font-size: 28px; }
@@ -1372,7 +1395,7 @@ export default function DateAndTell() {
         </div>
         <div className="stories-grid">
           {homeStories.map((s) => (
-            <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} reacted={storyReactions} />
+            <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} />
           ))}
         </div>
       </div>
@@ -1428,7 +1451,7 @@ export default function DateAndTell() {
               <div className="library-section-title">This week's drop</div>
               <div className="rainbow-accent" style={{ marginBottom: 20 }} />
               <div className="library-grid">
-                {filteredThisWeek.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} reacted={storyReactions} />)}
+                {filteredThisWeek.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} />)}
               </div>
               <div className="library-divider" />
             </>
@@ -1437,7 +1460,7 @@ export default function DateAndTell() {
           <div className="rainbow-accent" style={{ marginBottom: 20 }} />
           {filteredAll.length > 0 ? (
             <div className="library-grid">
-              {filteredAll.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} reacted={storyReactions} />)}
+              {filteredAll.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} />)}
             </div>
           ) : (
             <div className="library-grid"><div className="library-empty">{searchQuery ? "No stories match your search." : "No stories found for this filter."}</div></div>
