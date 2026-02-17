@@ -7,6 +7,8 @@ const nextConfig = {
       { source: '/login', destination: '/' },
       { source: '/signup', destination: '/' },
       { source: '/dashboard', destination: '/' },
+      { source: '/forgot-password', destination: '/' },
+      { source: '/reset-password', destination: '/' },
     ];
   },
 };
