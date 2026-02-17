@@ -300,7 +300,6 @@ export default function DateAndTell() {
   const [authPassword, setAuthPassword] = useState("");
   const [authName, setAuthName] = useState("");
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
-  const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const [dashboardStories, setDashboardStories] = useState([]);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashFilter, setDashFilter] = useState("all");
@@ -564,6 +563,17 @@ export default function DateAndTell() {
         if (!authUser && result.storyId) {
           addUnlinkedStoryId(result.storyId);
           setShowSignupPrompt(true);
+          // After 2 seconds, gently scroll to peek the signup card into view
+          setTimeout(() => {
+            const el = document.getElementById("post-submit-signup");
+            if (el) {
+              const rect = el.getBoundingClientRect();
+              const peekAmount = 120; // Show rainbow bar + title
+              if (rect.top > window.innerHeight) {
+                window.scrollTo({ top: window.pageYOffset + (rect.top - window.innerHeight + peekAmount), behavior: "smooth" });
+              }
+            }
+          }, 2000);
         }
       }
     } catch (err) {
@@ -1081,14 +1091,6 @@ export default function DateAndTell() {
     .post-submit-signup-sub { font-family: var(--font); font-size: 14px; color: var(--gray); line-height: 1.5; }
     .post-submit-signup .auth-input { background: white; border: 2px solid var(--border); }
     .post-submit-signup .auth-switch { margin-top: 4px; }
-    .signup-nudge { position: fixed; bottom: 0; left: 0; right: 0; z-index: 900; transform: translateY(100%); animation: nudgeUp 0.6s ease-out forwards; animation-delay: 2s; }
-    .signup-nudge-inner { max-width: 600px; margin: 0 auto; padding: 16px 24px; background: white; border-top: 1px solid var(--border); box-shadow: 0 -4px 24px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-    .signup-nudge-text { font-family: var(--font); font-size: 14px; color: var(--black); font-weight: 600; }
-    .signup-nudge-sub { font-family: var(--font); font-size: 12px; color: var(--gray); font-weight: 400; margin-top: 2px; }
-    .signup-nudge-btn { padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 10px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
-    .signup-nudge-btn:hover { background: var(--blue-dark); }
-    .signup-nudge-close { background: none; border: none; font-size: 18px; color: var(--gray-light); cursor: pointer; padding: 4px 8px; line-height: 1; }
-    @keyframes nudgeUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
     .submit-another-btn { width: 100%; margin-top: 20px; padding: 16px; background: var(--black); border: none; border-radius: 14px; font-family: var(--font); font-size: 15px; font-weight: 700; color: white; cursor: pointer; transition: all 0.2s; }
     .submit-another-btn:hover { background: #1E293B; }
@@ -1189,7 +1191,6 @@ export default function DateAndTell() {
       .dash-stats { grid-template-columns: 1fr; }
       .dash-filters { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
       .dash-filter { white-space: nowrap; flex-shrink: 0; }
-      .signup-nudge-inner { padding: 14px 16px; }
       .dash-title { font-size: 28px; }
     }
 
@@ -1352,7 +1353,7 @@ export default function DateAndTell() {
                   </div>
                 )}
 
-                <button className="submit-another-btn" onClick={() => { setSubmitResult(null); setStoryText(""); setShowSignupPrompt(false); setNudgeDismissed(false); setAuthError(""); setTimeout(() => { const el = document.getElementById("home-submit"); if (el) { const y = el.getBoundingClientRect().top + window.pageYOffset - 100; window.scrollTo({ top: y, behavior: "smooth" }); } }, 50); }}>
+                <button className="submit-another-btn" onClick={() => { setSubmitResult(null); setStoryText(""); setShowSignupPrompt(false); setAuthError(""); setTimeout(() => { const el = document.getElementById("home-submit"); if (el) { const y = el.getBoundingClientRect().top + window.pageYOffset - 100; window.scrollTo({ top: y, behavior: "smooth" }); } }, 50); }}>
                   Submit another story
                 </button>
               </>
@@ -1527,7 +1528,7 @@ export default function DateAndTell() {
                 )}
 
                 {/* Submit another story — at the bottom */}
-                <button className="submit-another-btn" onClick={() => { setSubmitResult(null); setStoryText(""); setShowSignupPrompt(false); setNudgeDismissed(false); setAuthError(""); }}>
+                <button className="submit-another-btn" onClick={() => { setSubmitResult(null); setStoryText(""); setShowSignupPrompt(false); setAuthError(""); }}>
                   Submit another story
                 </button>
               </>
@@ -1813,23 +1814,6 @@ export default function DateAndTell() {
             </div>
           </div>
         )
-      )}
-
-      {/* Sticky signup nudge after story submission */}
-      {showSignupPrompt && !nudgeDismissed && !authUser && (
-        <div className="signup-nudge">
-          <div className="signup-nudge-inner">
-            <div>
-              <div className="signup-nudge-text">Don't lose your story</div>
-              <div className="signup-nudge-sub">Create a free account to track reactions and shares.</div>
-            </div>
-            <button className="signup-nudge-btn" onClick={() => {
-              const el = document.getElementById("post-submit-signup");
-              if (el) { const y = el.getBoundingClientRect().top + window.pageYOffset - 80; window.scrollTo({ top: y, behavior: "smooth" }); }
-            }}>Save my story</button>
-            <button className="signup-nudge-close" onClick={() => setNudgeDismissed(true)}>✕</button>
-          </div>
-        </div>
       )}
 
       {/* Footer */}
