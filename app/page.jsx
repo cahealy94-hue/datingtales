@@ -1249,7 +1249,7 @@ export default function DateAndTell() {
           </p>
           <div className={loaded ? "fade-up d3" : ""}>
             {sub ? (
-              <div className="hero-subbed-success">You've joined the waitlist! You'll be the first to know when our first Friday drop goes live.</div>
+              <div className="hero-subbed-success">✓ You've joined the waitlist! You'll be the first to know when our first Friday drop goes live.</div>
             ) : (
               <div className="hero-email">
                 <input className="hero-input" placeholder="name@email.com" value={email}
@@ -1334,7 +1334,7 @@ export default function DateAndTell() {
                   </div>
                 )}
 
-                <button className="submit-another-btn" onClick={() => { setSubmitResult(null); setStoryText(""); setShowSignupPrompt(false); setAuthError(""); setTimeout(() => { document.getElementById("home-submit")?.scrollIntoView({ behavior: "smooth" }); }, 50); }}>
+                <button className="submit-another-btn" onClick={() => { setSubmitResult(null); setStoryText(""); setShowSignupPrompt(false); setAuthError(""); setTimeout(() => { const el = document.getElementById("home-submit"); if (el) { const y = el.getBoundingClientRect().top + window.pageYOffset - 100; window.scrollTo({ top: y, behavior: "smooth" }); } }, 50); }}>
                   Submit another story
                 </button>
               </>
@@ -1374,7 +1374,7 @@ export default function DateAndTell() {
         <div className="cta-title">Your inbox deserves better stories.</div>
         <p className="cta-sub">Bite-sized dating stories from real people, dropping every Friday. Love, Anonymous.</p>
         {sub ? (
-          <div className="hero-subbed-success" style={{ maxWidth: 480, margin: "0 auto" }}>You've joined the waitlist! You'll be the first to know when our first Friday drop goes live.</div>
+          <div className="hero-subbed-success" style={{ maxWidth: 480, margin: "0 auto" }}>✓ You've joined the waitlist! You'll be the first to know when our first Friday drop goes live.</div>
         ) : (
           <div className="cta-email">
             <input className="cta-input" placeholder="name@email.com" value={email} onChange={e => setEmail(e.target.value)}
@@ -1435,7 +1435,7 @@ export default function DateAndTell() {
           <h1>Get stories every <em>Friday</em></h1>
           <p className="subscribe-page-sub">The funniest, cringiest, and cutest anonymous dating stories, curated and delivered to your inbox weekly.</p>
           {sub ? (
-            <div className="hero-subbed-success" style={{ marginBottom: 16 }}>You've joined the waitlist! You'll be the first to know when our first Friday drop goes live.</div>
+            <div className="hero-subbed-success" style={{ marginBottom: 16 }}>✓ You've joined the waitlist! You'll be the first to know when our first Friday drop goes live.</div>
           ) : (<>
             <input className="subscribe-page-input" placeholder="name@email.com" value={email}
               onChange={e => setEmail(e.target.value)}
@@ -1660,7 +1660,7 @@ export default function DateAndTell() {
               <div className="dash-welcome-overlay" onClick={() => setShowDashWelcome(false)}>
                 <div className="dash-welcome" onClick={e => e.stopPropagation()}>
                   <div className="dash-welcome-emoji">🎉</div>
-                  <div className="dash-welcome-title">Welcome to your stories!</div>
+                  <div className="dash-welcome-title">You're in! Consider this your story HQ.</div>
                   <div className="dash-welcome-text">This is your personal dashboard. Here you can track every story you submit, see how people react to your published stories, and share your favorites.</div>
                   <button className="auth-btn" onClick={() => setShowDashWelcome(false)}>View my stories</button>
                 </div>
