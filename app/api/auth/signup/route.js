@@ -61,6 +61,24 @@ export async function POST(request) {
     return Response.json({ error: "Account created but login failed. Please log in manually." }, { status: 200 });
   }
 
+  // ── Add to subscribers table (upsert: if waitlist subscriber creates account, link their user_id) ──
+  const userId = createData.id;
+  fetch(`${SUPABASE_URL}/rest/v1/subscribers`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+      Prefer: "return=minimal,resolution=merge-duplicates",
+    },
+    body: JSON.stringify({
+      email,
+      source: "account_signup",
+      user_id: userId,
+      first_name: name || null,
+    }),
+  }).catch(err => console.error("Subscribers table upsert error:", err));
+
   // ── Send welcome email via Resend (fire and forget) ──
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   if (RESEND_API_KEY) {
