@@ -11,9 +11,9 @@ export async function POST(request) {
   const beehiivApiKey = process.env.BEEHIIV_API_KEY;
   const beehiivPubId = process.env.BEEHIIV_PUBLICATION_ID;
 
-  // Save to Supabase
+  // Save to Supabase subscribers table
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/subscribers`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/subscribers`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -21,8 +21,15 @@ export async function POST(request) {
         Authorization: `Bearer ${serviceKey}`,
         Prefer: "return=minimal",
       },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({
+        email,
+        source: "waitlist",
+      }),
     });
+    // 409 = duplicate email, that's fine
+    if (!res.ok && res.status !== 409) {
+      console.error("Supabase subscriber error:", res.status, await res.text());
+    }
   } catch (err) {
     console.error("Supabase subscriber error:", err);
   }
