@@ -9,6 +9,8 @@ const nextConfig = {
       { source: '/dashboard', destination: '/' },
       { source: '/forgot-password', destination: '/' },
       { source: '/reset-password', destination: '/' },
+      { source: '/terms', destination: '/' },
+      { source: '/privacy', destination: '/' },
     ];
   },
 };
