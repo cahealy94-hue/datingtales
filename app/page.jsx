@@ -1308,7 +1308,7 @@ export default function DateAndTell() {
       <section className="hero">
         <div>
           <div className={`hero-eyebrow ${loaded ? "fade-up d1" : ""}`}>
-            <span className="eyebrow-dot" /> Launching soon — join the waitlist
+            <span className="eyebrow-dot" /> Launching Friday — join the waitlist
           </div>
           <h1 className={loaded ? "fade-up d1" : ""}>
             Real dating stories,<br /><span className="hero-blue">told anonymously.</span>
