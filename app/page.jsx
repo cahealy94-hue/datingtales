@@ -172,16 +172,15 @@ function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved, isTr
   const handleCloseReport = () => { setReportStep(null); if (pendingReport) { onReport(story.id, selectedReason); } setSelectedReason(null); setPendingReport(false); };
 
   const handleShare = async () => {
-    const shareText = `"${story.title}" — ${story.text}\n\n— ${story.author} on Date & Tell`;
     const shareUrl = "https://dateandtell.com";
     const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     try {
       if (isMobile && navigator.share) {
-        await navigator.share({ title: story.title, text: shareText, url: shareUrl });
+        await navigator.share({ title: story.title, text: "Check out this story on Date&Tell!", url: shareUrl });
         return;
       }
       if (navigator.clipboard) {
-        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        await navigator.clipboard.writeText(`"${story.title}" — ${story.text}\n\n— ${story.author} on Date & Tell\n${shareUrl}`);
       }
     } catch {}
     setShared(true); setTimeout(() => setShared(false), 2500);
@@ -1884,17 +1883,16 @@ export default function DateAndTell() {
                       <span>📅 {s.submitted_at ? new Date(s.submitted_at).toLocaleDateString() : "—"}</span>
                       {isPublished && (
                         <span className="dash-share-link" onClick={async (e) => {
-                          const shareText = `"${s.title}" — ${s.rewritten_text}\n\n— ${s.author_persona} on Date & Tell`;
                           const shareUrl = "https://dateandtell.com";
                           const el = e.currentTarget;
                           const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
                           try {
                             if (isMobile && navigator.share) {
-                              await navigator.share({ title: s.title, text: shareText, url: shareUrl });
+                              await navigator.share({ title: s.title, text: "Check out this story on Date&Tell!", url: shareUrl });
                               return;
                             }
                             if (navigator.clipboard) {
-                              await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+                              await navigator.clipboard.writeText(`"${s.title}" — ${s.rewritten_text}\n\n— ${s.author_persona} on Date & Tell\n${shareUrl}`);
                               const origText = el.textContent;
                               el.textContent = "Copied!";
                               setTimeout(() => { el.textContent = origText; }, 1500);
