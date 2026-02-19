@@ -192,7 +192,10 @@ function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved, isTr
     <>
       <div className="story-card">
         <div className="story-card-header">
-          <div className="story-card-title">{story.title}</div>
+          <div className="story-card-title-row">
+            <div className="story-card-title">{story.title}</div>
+            {isTrending && <span className="trending-badge">🔥 Trending</span>}
+          </div>
           <div className="story-menu-wrap" ref={menuRef}>
             <button className="story-card-dots" onClick={() => setMenuOpen(!menuOpen)}>···</button>
             {menuOpen && (
@@ -210,10 +213,7 @@ function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved, isTr
             )}
           </div>
         </div>
-        <div className="story-card-badges">
-          <span className={`story-card-theme ${themeClass}`}>{story.theme}</span>
-          {isTrending && <span className="trending-badge">🔥 Trending</span>}
-        </div>
+        <span className={`story-card-theme ${themeClass}`}>{story.theme}</span>
         <div className="story-card-text">{story.text}</div>
         <div className="story-card-persona">— {story.author}</div>
         <div className="story-card-divider" />
@@ -880,6 +880,7 @@ export default function DateAndTell() {
     .story-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.06); border-color: transparent; }
     .story-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
     .story-card-title { font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--black); line-height: 1.25; }
+    .story-card-title-row { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
     .story-card-dots { color: var(--gray-light); font-size: 18px; cursor: pointer; background: none; border: none; padding: 4px 8px; border-radius: 8px; font-family: var(--font); }
     .story-card-dots:hover { background: var(--blue-pale); }
     .story-menu-wrap { position: relative; }
@@ -887,9 +888,7 @@ export default function DateAndTell() {
     .story-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 14px; border: none; background: none; font-family: var(--font); font-size: 13px; color: var(--gray); cursor: pointer; border-radius: 8px; transition: background 0.1s; }
     .story-menu-item:hover { background: var(--blue-pale); color: var(--blue); }
     .story-card-theme { display: inline-block; font-family: var(--font); font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .story-card-badges { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-    .story-card-badges .story-card-theme { margin-bottom: 0; }
-    .trending-badge { display: inline-flex; align-items: center; font-family: var(--font); font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 100px; background: #FEF3C7; color: #D97706; letter-spacing: 0.02em; }
+    .trending-badge { display: inline-flex; align-items: center; white-space: nowrap; font-family: var(--font); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 100px; background: #FEF3C7; color: #D97706; letter-spacing: 0.02em; }
     .theme-first-dates { background: #DCFCE7; color: #166534; }
     .theme-meet-cutes { background: #FEF3C7; color: #92400E; }
     .theme-awkward-moments { background: #F3E8FF; color: #7C3AED; }
