@@ -160,8 +160,6 @@ function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved, isTr
   const [pendingReport, setPendingReport] = useState(false);
   const [shared, setShared] = useState(false);
   const menuRef = useRef(null);
-  const [sortSnapshot, setSortSnapshot] = useState({});
-  const [trendingIds, setTrendingIds] = useState(new Set());
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -381,18 +379,15 @@ export default function DateAndTell() {
               publishedAt: s.published_at?.split("T")[0] || new Date().toISOString().split("T")[0],
               reactions: s.reactions || {},
             }));
-            setStories(dbStories);
-            // Snapshot reaction totals for stable sort order
-            const snapshot = {};
+            // Add sort score and trending flag to each story
             dbStories.forEach(s => {
-              snapshot[s.id] = Object.values(s.reactions || {}).reduce((sum, n) => sum + n, 0);
+              s._sortScore = Object.values(s.reactions || {}).reduce((sum, n) => sum + n, 0);
             });
-            setSortSnapshot(snapshot);
-            // Mark top 2 stories as trending
-            const sorted = [...dbStories].sort((a, b) => (snapshot[b.id] || 0) - (snapshot[a.id] || 0));
+            const sorted = [...dbStories].sort((a, b) => b._sortScore - a._sortScore);
             const minTrending = 5;
-            const trending = sorted.filter(s => (snapshot[s.id] || 0) >= minTrending).slice(0, 2);
-            setTrendingIds(new Set(trending.map(s => s.id)));
+            const trendingSet = new Set(sorted.filter(s => s._sortScore >= minTrending).slice(0, 2).map(s => s.id));
+            dbStories.forEach(s => { s._isTrending = trendingSet.has(s.id); });
+            setStories(dbStories);
           }
         }
       } catch (err) { console.error("Failed to fetch stories:", err); }
@@ -751,8 +746,8 @@ export default function DateAndTell() {
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
   const thisWeekStories = visibleStories.filter(s => s.publishedAt >= weekAgo);
   const sortByReactions = (arr) => [...arr].sort((a, b) => {
-    const totalA = sortSnapshot[a.id] || Object.values(a.reactions || {}).reduce((sum, n) => sum + n, 0);
-    const totalB = sortSnapshot[b.id] || Object.values(b.reactions || {}).reduce((sum, n) => sum + n, 0);
+    const totalA = a._sortScore != null ? a._sortScore : Object.values(a.reactions || {}).reduce((sum, n) => sum + n, 0);
+    const totalB = b._sortScore != null ? b._sortScore : Object.values(b.reactions || {}).reduce((sum, n) => sum + n, 0);
     return totalB - totalA;
   });
   const homeStories = sortByReactions(thisWeekStories).slice(0, 4);
@@ -1444,7 +1439,7 @@ export default function DateAndTell() {
         </div>
         <div className="stories-grid">
           {homeStories.map((s) => (
-            <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} isTrending={trendingIds.has(s.id)} />
+            <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} isTrending={s._isTrending} />
           ))}
         </div>
       </div>
@@ -1500,7 +1495,7 @@ export default function DateAndTell() {
               <div className="library-section-title">This week's drop</div>
               <div className="rainbow-accent" style={{ marginBottom: 20 }} />
               <div className="library-grid">
-                {filteredThisWeek.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} isTrending={trendingIds.has(s.id)} />)}
+                {filteredThisWeek.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} isTrending={s._isTrending} />)}
               </div>
               <div className="library-divider" />
             </>
@@ -1509,7 +1504,7 @@ export default function DateAndTell() {
           <div className="rainbow-accent" style={{ marginBottom: 20 }} />
           {filteredAll.length > 0 ? (
             <div className="library-grid">
-              {filteredAll.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} isTrending={trendingIds.has(s.id)} />)}
+              {filteredAll.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} isTrending={s._isTrending} />)}
             </div>
           ) : (
             <div className="library-grid"><div className="library-empty">{searchQuery ? "No stories match your search." : "No stories found for this filter."}</div></div>
