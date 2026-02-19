@@ -211,7 +211,10 @@ function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved, isTr
             )}
           </div>
         </div>
-        <span className={`story-card-theme ${themeClass}`}>{story.theme}</span>
+        <div className="story-card-tags">
+          <span className={`story-card-theme ${themeClass}`}>{story.theme}</span>
+          {isTrending && <span className="trending-badge">🔥 Trending</span>}
+        </div>
         <div className="story-card-text">{story.text}</div>
         <div className="story-card-persona">— {story.author}</div>
         <div className="story-card-divider" />
@@ -892,6 +895,8 @@ export default function DateAndTell() {
     .story-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
     .story-card-title { font-family: var(--font); font-size: 20px; font-weight: 700; color: var(--black); line-height: 1.25; }
     .story-card-trending { border: 1.5px solid #F59E0B; box-shadow: 0 2px 16px rgba(245, 158, 11, 0.15); }
+    .story-card-tags { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .trending-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: #D97706; background: #FFFBEB; padding: 3px 10px; border-radius: 999px; }
     .story-card-dots { color: var(--gray-light); font-size: 18px; cursor: pointer; background: none; border: none; padding: 4px 8px; border-radius: 8px; font-family: var(--font); }
     .story-card-dots:hover { background: var(--blue-pale); }
     .story-menu-wrap { position: relative; }
