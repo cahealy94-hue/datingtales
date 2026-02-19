@@ -751,8 +751,9 @@ export default function DateAndTell() {
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
   const thisWeekStories = visibleStories.filter(s => s.publishedAt >= weekAgo);
   const sortByReactions = (arr) => [...arr].sort((a, b) => {
-    const totalA = sortSnapshotRef.current[a.id] || 0;
-    const totalB = sortSnapshotRef.current[b.id] || 0;
+    const snapshot = sortSnapshotRef?.current || {};
+    const totalA = snapshot[a.id] || Object.values(a.reactions || {}).reduce((sum, n) => sum + n, 0);
+    const totalB = snapshot[b.id] || Object.values(b.reactions || {}).reduce((sum, n) => sum + n, 0);
     return totalB - totalA;
   });
   const homeStories = sortByReactions(thisWeekStories).slice(0, 4);
