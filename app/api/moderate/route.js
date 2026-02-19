@@ -35,33 +35,34 @@ Reject if the story contains: explicit sexual content, hate speech, harassment, 
 
 EDITING RULES:
 If acceptable, edit the story following these rules:
-- Keep it under 500 characters
-- Remove any identifying details (real names, specific cities, employers, schools)
+- Keep it under 750 characters
+- Remove any identifying details (real names, specific employers, schools)
 - Replace names with generic terms (e.g., "my date", "they", "he", "she")
-- Replace specific locations with generalized ones (e.g., "a coffee shop downtown")
+- You may keep general neighborhood or area references (e.g., "around the Marina") but remove specific addresses or venues
 - Remove any provocative or explicit language
-- Keep the original person's voice and phrasing as much as possible. Do NOT over-edit. Light touch only.
 
-TONE RULES (CRITICAL):
-- You are a friend retelling someone's dating story. You're naturally funny but you're not trying to be. The humor comes from HOW you tell it, not from forcing jokes in.
-- The story should sound like a real person telling it at a bar, not a police report of what happened. "I waved at my date walking into the bar. He didn't wave back. Because it wasn't him." is too flat. "Gave someone the full enthusiastic wave the second they walked in. Big smile, the whole thing. He just stared at me. Because it wasn't my date. My actual date was behind me watching the whole thing." is the right energy. Natural, vivid, a little self-deprecating.
-- Read the submission and ask: what's the funniest or most interesting part? Make sure that moment lands. Don't bury it.
+VOICE RULES (CRITICAL — READ CAREFULLY):
+- MATCH THE ORIGINAL POV: If the person writes using "I" statements, YOUR rewrite MUST also use "I" statements. If they write in third person, keep third person. Mirror their perspective exactly.
+- KEEP THEIR WORDS: Your job is to polish, not rewrite from scratch. Keep the person's original phrasing, expressions, and word choices as much as possible. If they said "I muster up the courage," keep "I muster up the courage." Don't change it to "So I ask if I can sit with him."
+- DON'T MAKE IT CHOPPY: Avoid turning flowing sentences into short, staccato fragments. The rewrite should read like ONE continuous story being told, not a list of things that happened. Connect ideas naturally with "and," commas, or natural transitions.
+- PRESERVE EVERY IMPORTANT DETAIL: Do NOT drop details that make the story special. If someone mentions a chocolate bar from England, that detail stays. If someone mentions a bean allergy, that stays. If the waitress said something, keep what she said. The specific details ARE the story.
+- KEEP THEIR ENERGY: If the original is warm and sweet, keep it warm and sweet. If it's sarcastic, keep it sarcastic. If it's dramatic, keep it dramatic. Don't flatten their personality.
+
+STORYTELLING RULES:
+- Think of this as telling a friend's story at dinner. It should flow naturally from setup to punchline.
+- STRUCTURE IT AS: Setup (context) → Build (the situation develops) → Payoff (the moment that makes it a great story). The best part should land at or near the end.
+- DON'T RUSH: Let the story breathe. Use natural connectors like "and," "so," "then," "at one point" to keep it flowing. A story that feels like one continuous moment is better than a story that feels like five separate bullet points.
+- END ON THE STRONGEST MOMENT: Find the funniest, sweetest, or most surprising part and make sure it's the last thing the reader reads. Don't add commentary after it. Just let it land.
 - Never use em dashes. Use commas, periods, or "and" instead.
 - Never use flowery or poetic language. No "cuddled," "nestled," "blossomed," "ignited a spark," etc.
-
-COMEDY GUIDELINES:
-- DON'T SUMMARIZE, SHOW: If something funny happened, don't tell the reader it was funny or awkward. Describe it so they feel it themselves. Let the details do the work.
-- SPECIFICITY HELPS: Vague is forgettable. A small, specific detail makes a moment real. But don't force it. Only add details that feel believable and natural.
-- SLOW DOWN THE GOOD PARTS: If there's an embarrassing or absurd moment, give it a beat. Don't rush past it in one sentence. But don't overdo it either. One or two extra beats, not five.
-- END WELL: The last sentence should leave the reader smiling. Often the funniest line IS the ending. Don't explain, don't moralize, just stop.
-- STAY GROUNDED: You can improve the delivery and add small natural details, but don't turn a sweet story into a roast or a quiet moment into slapstick. Match the energy of the original. If someone's telling a cute story, keep it cute. If they're telling a cringe story, lean into the cringe.
-- You CAN improve the delivery and framing of what happened. Don't invent events, but you can make the real events land better. Same facts, better storytelling.
-- Keep it under 500 characters. Every word should earn its spot.
-- Use casual, conversational language. Short sentences are fine. Fragments are fine.
 - Contractions always (don't, can't, wasn't, etc.)
-- Keep some messiness. Real stories aren't perfectly structured. That's what makes them feel real.
-- Never add a moral, lesson, or neat ending. No "and that's when I knew," "sometimes the best things happen when," "turns out," or "needless to say." Just end it.
-- Keep filler words if they feel natural. "Like," "honestly," "I mean," "literally" are fine.
+- Never add a moral, lesson, or neat ending. No "and that's when I knew," "sometimes the best things happen when," "turns out," or "needless to say."
+
+WHAT GOOD EDITING LOOKS LIKE:
+- Original: "I matched with this guy on the apps about 6 months ago and we never connected in-person. We would see each other every once in a while around the Marina and would wave hello. One day, I see him working from a busy coffee shop and I couldn't find a seat. I muster up the courage to ask if I could sit with him while I do some work."
+- GOOD rewrite: "I matched with this guy on the apps about 6 months ago and we never actually met up. We'd see each other around the Marina every now and then and wave. One day I spot him working at a packed coffee shop and there's nowhere to sit, so I finally muster up the courage to ask if I can join him."
+- BAD rewrite: "I matched with this guy 6 months ago and never met up. Classic. We'd wave when we saw each other around the Marina. One day I see him at a coffee shop and can't find a seat, so I muster up the courage and ask if I can sit with him."
+- The BAD version is choppy, drops the natural flow, and adds "Classic" which wasn't in the original. The GOOD version keeps the person's voice and lets the story flow.
 
 ALSO GENERATE:
 - A fun, catchy title (max 40 chars). Make it sound like a group chat message, not a newspaper headline. Use sentence case (capitalize only the first word, not every word).
@@ -85,11 +86,11 @@ ${storyText}`
       result = JSON.parse(text);
     } catch {
       console.error("AI response not valid JSON:", text);
-      result = { status: "approved", title: "Untitled", theme: "Awkward Moments", author: "Anonymous", rewritten: storyText.slice(0, 500), tags: "" };
+      result = { status: "approved", title: "Untitled", theme: "Awkward Moments", author: "Anonymous", rewritten: storyText.slice(0, 750), tags: "" };
     }
   } catch (err) {
     console.error("AI moderation error:", err);
-    result = { status: "approved", title: "Untitled", theme: "Awkward Moments", author: "Anonymous", rewritten: storyText.slice(0, 500), tags: "" };
+    result = { status: "approved", title: "Untitled", theme: "Awkward Moments", author: "Anonymous", rewritten: storyText.slice(0, 750), tags: "" };
   }
 
   // ── Capitalize title (sentence case) ──
