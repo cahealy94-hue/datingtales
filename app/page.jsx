@@ -153,13 +153,15 @@ function clearUnlinkedStoryIds() {
 }
 
 // ── Story Card Component ──
-function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved }) {
+function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved, isTrending }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportStep, setReportStep] = useState(null);
   const [selectedReason, setSelectedReason] = useState(null);
   const [pendingReport, setPendingReport] = useState(false);
   const [shared, setShared] = useState(false);
   const menuRef = useRef(null);
+  const sortSnapshotRef = useRef({});
+  const trendingIdsRef = useRef(new Set());
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -210,7 +212,10 @@ function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved }) {
             )}
           </div>
         </div>
-        <span className={`story-card-theme ${themeClass}`}>{story.theme}</span>
+        <div className="story-card-badges">
+          <span className={`story-card-theme ${themeClass}`}>{story.theme}</span>
+          {isTrending && <span className="trending-badge">🔥 Trending</span>}
+        </div>
         <div className="story-card-text">{story.text}</div>
         <div className="story-card-persona">— {story.author}</div>
         <div className="story-card-divider" />
@@ -377,6 +382,17 @@ export default function DateAndTell() {
               reactions: s.reactions || {},
             }));
             setStories(dbStories);
+            // Snapshot reaction totals for stable sort order
+            const snapshot = {};
+            dbStories.forEach(s => {
+              snapshot[s.id] = Object.values(s.reactions || {}).reduce((sum, n) => sum + n, 0);
+            });
+            sortSnapshotRef.current = snapshot;
+            // Mark top 2 stories as trending
+            const sorted = [...dbStories].sort((a, b) => (snapshot[b.id] || 0) - (snapshot[a.id] || 0));
+            const minTrending = 5; // need at least 5 total reactions to be trending
+            const trending = sorted.filter(s => (snapshot[s.id] || 0) >= minTrending).slice(0, 2);
+            trendingIdsRef.current = new Set(trending.map(s => s.id));
           }
         }
       } catch (err) { console.error("Failed to fetch stories:", err); }
@@ -735,8 +751,8 @@ export default function DateAndTell() {
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
   const thisWeekStories = visibleStories.filter(s => s.publishedAt >= weekAgo);
   const sortByReactions = (arr) => [...arr].sort((a, b) => {
-    const totalA = Object.values(a.reactions || {}).reduce((sum, n) => sum + n, 0);
-    const totalB = Object.values(b.reactions || {}).reduce((sum, n) => sum + n, 0);
+    const totalA = sortSnapshotRef.current[a.id] || 0;
+    const totalB = sortSnapshotRef.current[b.id] || 0;
     return totalB - totalA;
   });
   const homeStories = sortByReactions(thisWeekStories).slice(0, 4);
@@ -876,6 +892,9 @@ export default function DateAndTell() {
     .story-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 14px; border: none; background: none; font-family: var(--font); font-size: 13px; color: var(--gray); cursor: pointer; border-radius: 8px; transition: background 0.1s; }
     .story-menu-item:hover { background: var(--blue-pale); color: var(--blue); }
     .story-card-theme { display: inline-block; font-family: var(--font); font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .story-card-badges { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .story-card-badges .story-card-theme { margin-bottom: 0; }
+    .trending-badge { display: inline-flex; align-items: center; font-family: var(--font); font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 100px; background: #FEF3C7; color: #D97706; letter-spacing: 0.02em; }
     .theme-first-dates { background: #DCFCE7; color: #166534; }
     .theme-meet-cutes { background: #FEF3C7; color: #92400E; }
     .theme-awkward-moments { background: #F3E8FF; color: #7C3AED; }
@@ -1425,7 +1444,7 @@ export default function DateAndTell() {
         </div>
         <div className="stories-grid">
           {homeStories.map((s) => (
-            <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} />
+            <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} isTrending={trendingIdsRef.current.has(s.id)} />
           ))}
         </div>
       </div>
@@ -1481,7 +1500,7 @@ export default function DateAndTell() {
               <div className="library-section-title">This week's drop</div>
               <div className="rainbow-accent" style={{ marginBottom: 20 }} />
               <div className="library-grid">
-                {filteredThisWeek.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} />)}
+                {filteredThisWeek.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} isTrending={trendingIdsRef.current.has(s.id)} />)}
               </div>
               <div className="library-divider" />
             </>
@@ -1490,7 +1509,7 @@ export default function DateAndTell() {
           <div className="rainbow-accent" style={{ marginBottom: 20 }} />
           {filteredAll.length > 0 ? (
             <div className="library-grid">
-              {filteredAll.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} />)}
+              {filteredAll.map(s => <StoryCard key={s.id} story={s} onReaction={handleReaction} onReport={handleReport} onSave={handleSaveStory} reacted={storyReactions} isSaved={savedStories.includes(s.id)} isTrending={trendingIdsRef.current.has(s.id)} />)}
             </div>
           ) : (
             <div className="library-grid"><div className="library-empty">{searchQuery ? "No stories match your search." : "No stories found for this filter."}</div></div>
