@@ -1687,7 +1687,7 @@ export default function DateAndTell() {
                 )}
 
                 {/* Submit another story — at the bottom */}
-                <button className="submit-another-btn" onClick={() => { setSubmitResult(null); setStoryText(""); setOriginalStoryText(""); setShowOriginal(false); setShowSignupPrompt(false); setAuthError(""); }}>
+                <button className="submit-another-btn" onClick={() => { setSubmitResult(null); setStoryText(""); setOriginalStoryText(""); setShowOriginal(false); setShowSignupPrompt(false); setAuthError(""); window.scrollTo(0, 0); }}>
                   Submit another story
                 </button>
               </>
