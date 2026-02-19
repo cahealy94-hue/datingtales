@@ -174,8 +174,9 @@ function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved, isTr
   const handleShare = async () => {
     const shareText = `"${story.title}" — ${story.text}\n\n— ${story.author} on Date & Tell`;
     const shareUrl = "https://dateandtell.com";
+    const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     try {
-      if (navigator.share) {
+      if (isMobile && navigator.share) {
         await navigator.share({ title: story.title, text: shareText, url: shareUrl });
         return;
       }
@@ -311,6 +312,7 @@ export default function DateAndTell() {
   const [authName, setAuthName] = useState("");
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const [signupReason, setSignupReason] = useState(null);
+  const pendingSaveRef = useRef(null);
   const [dashboardStories, setDashboardStories] = useState([]);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashFilter, setDashFilter] = useState("all");
@@ -434,6 +436,15 @@ export default function DateAndTell() {
         });
         clearUnlinkedStoryIds();
       } catch (err) { console.error("Link story error:", err); }
+    }
+    // Apply pending save if user tried to save before signing up
+    if (pendingSaveRef.current) {
+      setSavedStories(prev => {
+        const updated = prev.includes(pendingSaveRef.current) ? prev : [...prev, pendingSaveRef.current];
+        try { localStorage.setItem("dt_saved_stories", JSON.stringify(updated)); } catch {}
+        return updated;
+      });
+      pendingSaveRef.current = null;
     }
     setPage("dashboard");
   };
@@ -650,6 +661,7 @@ export default function DateAndTell() {
 
   const handleSaveStory = useCallback((storyId) => {
     if (!authUser) {
+      pendingSaveRef.current = storyId;
       setSignupReason("save");
       setPage("signup");
       return;
@@ -1871,8 +1883,9 @@ export default function DateAndTell() {
                           const shareText = `"${s.title}" — ${s.rewritten_text}\n\n— ${s.author_persona} on Date & Tell`;
                           const shareUrl = "https://dateandtell.com";
                           const el = e.currentTarget;
+                          const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
                           try {
-                            if (navigator.share) {
+                            if (isMobile && navigator.share) {
                               await navigator.share({ title: s.title, text: shareText, url: shareUrl });
                               return;
                             }
