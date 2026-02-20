@@ -1073,6 +1073,7 @@ export default function DateAndTell() {
     .submit-textarea::placeholder { color: var(--gray-light); }
     .submit-textarea:focus { outline: none; border-color: var(--blue); }
     .submit-row { display: flex; justify-content: flex-end; align-items: center; margin-top: 12px; }
+    .submit-trust { display: flex; align-items: center; justify-content: center; gap: 6px; font-family: var(--font); font-size: 13px; color: var(--gray); margin-top: 16px; }
     .submit-btn { padding: 14px 28px; background: var(--black); color: white; border: none; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
     .submit-btn:hover { background: #1E293B; }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -1520,8 +1521,8 @@ export default function DateAndTell() {
       <div className="submit-section home-submit" id="home-submit">
         <div className="submit-inner">
           <div>
-            <h2 className="submit-title">Got a story?</h2>
-            <p className="submit-sub">Chaotic, wholesome, unhinged, we want it all. Your worst date is someone's best Friday read. Write as much as you want, our AI anonymizes and condenses every story.</p>
+            <h2 className="submit-title">Got a dating story?</h2>
+            <p className="submit-sub">Chaotic, wholesome, unhinged, we want it all. Your worst date is someone's best Friday read. Write as much as you want, our <strong>AI anonymizes and polishes every story.</strong></p>
           </div>
           <div>
             {!submitResult ? (
@@ -1536,6 +1537,7 @@ export default function DateAndTell() {
                     {submitting ? <><span className="spinner" /> Our AI is polishing your story...</> : <>Submit story <Arrow /></>}
                   </button>
                 </div>
+                <div className="submit-trust"><span>🔒</span> <strong>100% anonymous.</strong> Names, locations, and details are always removed.</div>
               </>
             ) : (
               <>
@@ -1702,7 +1704,7 @@ export default function DateAndTell() {
                 <button className="submit-page-btn" onClick={handleSubmitStory} disabled={!storyText.trim() || submitting}>
                   {submitting ? <><span className="spinner" /> Our AI is polishing your story...</> : "Submit story"}
                 </button>
-                <p className="submit-page-fine">All stories are anonymized and condensed by AI to fit our format. Write as much as you want, we'll handle the rest.</p>
+                <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names, locations, and details are always removed. Write as much as you want, our AI anonymizes and polishes every story.</p>
               </>
             ) : (
               <>
