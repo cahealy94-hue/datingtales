@@ -1074,7 +1074,7 @@ export default function DateAndTell() {
     .submit-textarea:focus { outline: none; border-color: var(--blue); }
     .submit-row { display: flex; justify-content: flex-end; align-items: center; margin-top: 12px; }
     .submit-trust { font-family: var(--font); font-size: 13px; color: var(--gray); margin-top: 16px; text-align: center; line-height: 1.5; }
-    .submit-btn { padding: 14px 28px; background: var(--black); color: white; border: none; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+    .submit-btn { padding: 14px 28px; background: var(--black); color: white; border: none; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; width: 100%; }
     .submit-btn:hover { background: #1E293B; }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .submit-result { margin-top: 16px; padding: 16px; border-radius: 12px; font-family: var(--font); font-size: 14px; line-height: 1.5; }
@@ -1706,7 +1706,7 @@ export default function DateAndTell() {
                 <button className="submit-page-btn" onClick={handleSubmitStory} disabled={!storyText.trim() || submitting}>
                   {submitting ? <><span className="spinner" /> Our AI is polishing your story...</> : "Submit story"}
                 </button>
-                <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed. Write as much as you want, our AI anonymizes and polishes every story.</p>
+                <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed.</p>
               </>
             ) : (
               <>
