@@ -841,8 +841,18 @@ export default function DateAndTell() {
   // ── Computed ──
   const visibleStories = stories.filter(s => !hiddenStories.has(s.id));
   const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-  const thisWeekStories = visibleStories.filter(s => s.publishedAt >= weekAgo);
+  // Find most recent Friday 6am PT (1pm UTC) as the drop cutoff
+  const getMostRecentFriday = () => {
+    const d = new Date(now);
+    d.setUTCHours(13, 0, 0, 0); // 6am PT = 1pm UTC
+    const day = d.getUTCDay();
+    const diff = (day + 2) % 7; // days since Friday
+    d.setUTCDate(d.getUTCDate() - diff);
+    if (d > now) d.setUTCDate(d.getUTCDate() - 7);
+    return d.toISOString();
+  };
+  const dropCutoff = getMostRecentFriday();
+  const thisWeekStories = visibleStories.filter(s => s.publishedAt && s.publishedAt >= dropCutoff);
   const sortByReactions = (arr) => [...arr].sort((a, b) => {
     const totalA = a._sortScore != null ? a._sortScore : Object.values(a.reactions || {}).reduce((sum, n) => sum + n, 0);
     const totalB = b._sortScore != null ? b._sortScore : Object.values(b.reactions || {}).reduce((sum, n) => sum + n, 0);
@@ -875,9 +885,11 @@ export default function DateAndTell() {
   }, []);
 
   const filteredThisWeek = sortByReactions(searchFilter(themeFilter(thisWeekStories)));
+  const thisWeekIds = new Set(thisWeekStories.map(s => s.id));
+  const olderStories = visibleStories.filter(s => !thisWeekIds.has(s.id));
   const filteredAll = searchQuery.trim() || filter !== "All"
-    ? sortByReactions(searchFilter(themeFilter(visibleStories)))
-    : shuffleWithWeight(searchFilter(themeFilter(visibleStories)), libraryShuffleKey);
+    ? sortByReactions(searchFilter(themeFilter(searchQuery.trim() ? visibleStories : olderStories)))
+    : shuffleWithWeight(searchFilter(themeFilter(olderStories)), libraryShuffleKey);
   const allThemes = ["All", ...THEMES];
 
   // ── Dashboard helpers ──
