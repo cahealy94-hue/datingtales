@@ -841,17 +841,18 @@ export default function DateAndTell() {
   // ── Computed ──
   const visibleStories = stories.filter(s => !hiddenStories.has(s.id));
   const now = new Date();
-  // Find most recent Friday 6am PT (1pm UTC) as the drop cutoff
-  const getMostRecentFriday = () => {
+  // Cutoff = most recent Friday 6am PT (1pm UTC)
+  // Only stories published by the Friday cron go in "This week's drop"
+  const getDropCutoff = () => {
     const d = new Date(now);
-    d.setUTCHours(13, 0, 0, 0); // 6am PT = 1pm UTC
+    d.setUTCHours(13, 0, 0, 0);
     const day = d.getUTCDay();
-    const diff = (day + 2) % 7; // days since Friday
+    const diff = (day + 2) % 7;
     d.setUTCDate(d.getUTCDate() - diff);
     if (d > now) d.setUTCDate(d.getUTCDate() - 7);
     return d.toISOString();
   };
-  const dropCutoff = getMostRecentFriday();
+  const dropCutoff = getDropCutoff();
   const thisWeekStories = visibleStories.filter(s => s.publishedAt && s.publishedAt >= dropCutoff);
   const sortByReactions = (arr) => [...arr].sort((a, b) => {
     const totalA = a._sortScore != null ? a._sortScore : Object.values(a.reactions || {}).reduce((sum, n) => sum + n, 0);
