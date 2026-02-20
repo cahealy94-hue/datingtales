@@ -1073,7 +1073,7 @@ export default function DateAndTell() {
     .submit-textarea::placeholder { color: var(--gray-light); }
     .submit-textarea:focus { outline: none; border-color: var(--blue); }
     .submit-row { display: flex; justify-content: flex-end; align-items: center; margin-top: 12px; }
-    .submit-trust { display: flex; align-items: center; justify-content: center; gap: 6px; font-family: var(--font); font-size: 13px; color: var(--gray); margin-top: 16px; }
+    .submit-trust { font-family: var(--font); font-size: 13px; color: var(--gray); margin-top: 16px; text-align: center; line-height: 1.5; }
     .submit-btn { padding: 14px 28px; background: var(--black); color: white; border: none; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
     .submit-btn:hover { background: #1E293B; }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -1355,6 +1355,8 @@ export default function DateAndTell() {
       .submit-inner { grid-template-columns: 1fr; padding: 24px; gap: 20px; border-radius: 20px; }
       .submit-title { font-size: 22px; }
       .submit-textarea { min-height: 120px; font-size: 16px; }
+      .submit-row { justify-content: center; }
+      .submit-btn { width: 100%; justify-content: center; }
       .sp-card { padding: 20px; }
       .sp-card-title { font-size: 16px; }
       .sp-edit-textarea { font-size: 16px; }
@@ -1537,7 +1539,7 @@ export default function DateAndTell() {
                     {submitting ? <><span className="spinner" /> Our AI is polishing your story...</> : <>Submit story <Arrow /></>}
                   </button>
                 </div>
-                <div className="submit-trust"><span>🔒</span> <strong>100% anonymous.</strong> Names, locations, and details are always removed.</div>
+                <div className="submit-trust">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed.</div>
               </>
             ) : (
               <>
@@ -1691,7 +1693,7 @@ export default function DateAndTell() {
           <div className="submit-page-rainbow" />
           <div className="submit-page-card">
             <h1>Spill it. Anonymously.</h1>
-            <p className="submit-page-sub">Your story stays between us (and a few thousand readers).</p>
+            <p className="submit-page-sub">Write as much as you want — our <strong>AI removes names and identifying details</strong> so no one ever knows it's you.</p>
 
             {/* Show form if no result yet, otherwise show post-submit flow */}
             {!submitResult ? (
@@ -1704,7 +1706,7 @@ export default function DateAndTell() {
                 <button className="submit-page-btn" onClick={handleSubmitStory} disabled={!storyText.trim() || submitting}>
                   {submitting ? <><span className="spinner" /> Our AI is polishing your story...</> : "Submit story"}
                 </button>
-                <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names, locations, and details are always removed. Write as much as you want, our AI anonymizes and polishes every story.</p>
+                <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed. Write as much as you want, our AI anonymizes and polishes every story.</p>
               </>
             ) : (
               <>
