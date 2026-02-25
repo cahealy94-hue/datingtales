@@ -264,18 +264,18 @@ const [beenThereModal, setBeenThereModal] = useState(false);
       )}
 {beenThereModal && (
   <div className="report-overlay" onClick={() => setBeenThereModal(false)}>
-    <div className="report-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 440 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h3 style={{ marginBottom: 4 }}>💯 Been there?</h3>
-          <p className="report-sub" style={{ marginBottom: 16 }}>The best stories come from people who've lived it. Spill yours — it takes 30 seconds.</p>
+    <div onClick={e => e.stopPropagation()} style={{ maxWidth: 440, width: "100%", margin: "0 20px" }}>
+      <div className="submit-page-rainbow" />
+      <div style={{ background: "white", borderRadius: "0 0 20px 20px", padding: "36px 28px", border: "1px solid var(--border)", borderTop: "none", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
+        <h1 style={{ fontFamily: "var(--font)", fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--black)", marginBottom: 8 }}>Been there?</h1>
+        <p style={{ fontFamily: "var(--font)", fontSize: 15, color: "var(--gray)", marginBottom: 20, lineHeight: 1.5 }}>The best stories come from people who've lived it. Write as much as you want — our <strong>AI removes names and identifying details</strong> so no one ever knows it's you.</p>
+        <div style={{ position: "relative", marginBottom: 12 }}>
+          <textarea className="submit-page-textarea" placeholder="Tell us your funniest, cringiest, or cutest dating moment…" value={storyText} onChange={e => onStoryTextChange(e.target.value)} style={{ minHeight: 140 }} />
+          <span className={`submit-page-char ${storyText.length > 750 ? "over" : storyText.length > 600 ? "warn" : ""}`}>{storyText.length}/750</span>
         </div>
-        <button onClick={() => setBeenThereModal(false)} style={{ background: "none", border: "none", fontSize: 20, color: "#94A3B8", cursor: "pointer", padding: "4px 8px" }}>✕</button>
+        <button className="submit-page-btn" onClick={() => { setBeenThereModal(false); onNavigateSubmit(); }}>Submit story</button>
+        <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed.</p>
       </div>
-      <textarea placeholder="Tell us your dating moment…" value={storyText} onChange={e => onStoryTextChange(e.target.value)} style={{ width: "100%", padding: 14, border: "2px solid #E2E8F0", borderRadius: 12, fontSize: 15, fontFamily: "var(--font)", color: "#0F172A", resize: "vertical", lineHeight: 1.5, minHeight: 120, background: "#EFF6FF" }} />
-      <button className="auth-btn" style={{ marginTop: 12 }} onClick={() => { setBeenThereModal(false); onNavigateSubmit(); }}>Keep writing on submit page →</button>
-      <button className="report-cancel" style={{ marginTop: 8, width: "100%" }} onClick={() => setBeenThereModal(false)}>Maybe later</button>
-      <p style={{ fontFamily: "var(--font)", fontSize: 12, color: "#94A3B8", textAlign: "center", marginTop: 10 }}>🔒 100% anonymous. Always.</p>
     </div>
   </div>
 )}
