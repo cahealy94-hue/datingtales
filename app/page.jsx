@@ -1482,7 +1482,7 @@ export default function DateAndTell() {
             Real dating stories,<br /><span className="hero-blue">told anonymously.</span>
           </h1>
           <p className={`hero-sub ${loaded ? "fade-up d2" : ""}`}>
-            Bite-sized dating stories, dropping in your inbox every Friday. Because dating is better when we're all in on the joke.
+            Bite-sized dating stories, dropping in your inbox every Friday. Because dating is more fun when we're all in on the joke.
           </p>
           <div className={loaded ? "fade-up d3" : ""}>
             {heroSub ? (
