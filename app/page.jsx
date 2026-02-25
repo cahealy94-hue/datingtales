@@ -158,7 +158,8 @@ function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved, isTr
   const [reportStep, setReportStep] = useState(null);
   const [selectedReason, setSelectedReason] = useState(null);
   const [pendingReport, setPendingReport] = useState(false);
-  const [beenThereModal, setBeenThereModal] = useState(false);
+  const [shared, setShared] = useState(false);
+const [beenThereModal, setBeenThereModal] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -2230,7 +2231,7 @@ export default function DateAndTell() {
         <div className="footer-inner">
           <div className="footer-brand">
             <div className="footer-logo" onClick={() => setPage("home")} style={{ cursor: "pointer" }}>Date&Tell</div>
-            <div className="footer-tagline">Anonymous dating stories, delivered every Friday. Because dating is better when we're all in on the joke.</div>
+            <div className="footer-tagline">Anonymous dating stories, delivered every Friday. Because dating is more fun when we're all in on the joke.</div>
           </div>
           <div className="footer-links-group">
             <div className="footer-col">
