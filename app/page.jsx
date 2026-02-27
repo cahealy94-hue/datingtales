@@ -1542,7 +1542,7 @@ export default function DateAndTell() {
         <div className="submit-inner">
           <div>
             <h2 className="submit-title">Got a dating story?</h2>
-            <p className="submit-sub">Chaotic, wholesome, unhinged, we want it all. Your worst date is someone's best Friday read. Write as much as you want, our <strong>AI anonymizes and polishes every story.</strong> All stories go through an approval process before going live.</p>
+            <p className="submit-sub">Chaotic, wholesome, unhinged, we want it all. Your worst date is someone's best Friday read. Write as much as you want, our <strong>AI anonymizes and polishes every story.</strong></p>
           </div>
           <div>
             {!submitResult ? (
@@ -1557,7 +1557,7 @@ export default function DateAndTell() {
                     {submitting ? <><span className="spinner" /> Our AI is polishing your story...</> : <>Submit story <Arrow /></>}
                   </button>
                 </div>
-                <div className="submit-trust">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed.</div>
+                <div className="submit-trust">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed. All stories go through an approval process before going live.</div>
               </>
             ) : (
               <>
@@ -1724,7 +1724,7 @@ export default function DateAndTell() {
                 <button className="submit-page-btn" onClick={handleSubmitStory} disabled={!storyText.trim() || submitting}>
                   {submitting ? <><span className="spinner" /> Our AI is polishing your story...</> : "Submit story"}
                 </button>
-                <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed.</p>
+                <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed. All stories go through an approval process before going live.</p>
               </>
             ) : (
               <>
