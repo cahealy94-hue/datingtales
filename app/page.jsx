@@ -1633,7 +1633,7 @@ export default function DateAndTell() {
         <div className="cta-title">Your inbox deserves better stories.</div>
         <p className="cta-sub">Bite-sized dating stories from real people, dropping every Friday. Love, Anonymous.</p>
         {ctaSub ? (
-          <div className="hero-subbed-success" style={{ maxWidth: 480, margin: "0 auto" }}>✓ You've joined the waitlist! You'll be the first to know when our first Friday drop goes live.</div>
+          <div className="hero-subbed-success" style={{ maxWidth: 480, margin: "0 auto" }}>✓ You're subscribed! New stories hit your inbox every Friday.</div>
         ) : (
           <div className="cta-email">
             <input className="cta-input" placeholder="name@email.com" value={email} onChange={e => setEmail(e.target.value)}
