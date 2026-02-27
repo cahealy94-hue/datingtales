@@ -1541,7 +1541,7 @@ export default function DateAndTell() {
       <div className="submit-section home-submit" id="home-submit">
         <div className="submit-inner">
           <div>
-            <h2 className="submit-title">Got a dating story?</h2>
+            <h2 className="submit-title">Have a dating story?</h2>
             <p className="submit-sub">Chaotic, wholesome, unhinged, we want it all. Your worst date is someone's best Friday read. Write as much as you want, our <strong>AI anonymizes and polishes every story.</strong></p>
           </div>
           <div>
