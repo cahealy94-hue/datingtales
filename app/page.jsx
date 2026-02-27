@@ -1494,7 +1494,7 @@ export default function DateAndTell() {
       <section className="hero">
         <div>
           <div className={`hero-eyebrow ${loaded ? "fade-up d1" : ""}`}>
-            <span className="eyebrow-dot" /> Launching Friday — join the waitlist
+            <span className="eyebrow-dot" /> New stories drop every Friday
           </div>
           <h1 className={loaded ? "fade-up d1" : ""}>
             Real dating stories,<br /><span className="hero-blue">told anonymously.</span>
@@ -1504,13 +1504,13 @@ export default function DateAndTell() {
           </p>
           <div className={loaded ? "fade-up d3" : ""}>
             {heroSub ? (
-              <div className="hero-subbed-success">✓ You've joined the waitlist! You'll be the first to know when our first Friday drop goes live.</div>
+              <div className="hero-subbed-success">✓ You're subscribed! New stories hit your inbox every Friday.</div>
             ) : (
               <div className="hero-email">
                 <input className="hero-input" placeholder="name@email.com" value={email}
                   onChange={e => setEmail(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") handleSubscribe("hero"); }} />
-                <button className="hero-btn" onClick={() => handleSubscribe("hero")}>Join waitlist <Arrow /></button>
+                <button className="hero-btn" onClick={() => handleSubscribe("hero")}>Subscribe <Arrow /></button>
               </div>
             )}
           </div>
@@ -1542,7 +1542,7 @@ export default function DateAndTell() {
         <div className="submit-inner">
           <div>
             <h2 className="submit-title">Got a dating story?</h2>
-            <p className="submit-sub">Chaotic, wholesome, unhinged, we want it all. Your worst date is someone's best Friday read. Write as much as you want, our <strong>AI anonymizes and polishes every story.</strong></p>
+            <p className="submit-sub">Chaotic, wholesome, unhinged, we want it all. Your worst date is someone's best Friday read. Write as much as you want, our <strong>AI anonymizes and polishes every story.</strong> All stories go through an approval process before going live.</p>
           </div>
           <div>
             {!submitResult ? (
@@ -1638,7 +1638,7 @@ export default function DateAndTell() {
           <div className="cta-email">
             <input className="cta-input" placeholder="name@email.com" value={email} onChange={e => setEmail(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") handleSubscribe("cta"); }} />
-            <button className="cta-btn" onClick={() => handleSubscribe("cta")}>Join waitlist</button>
+            <button className="cta-btn" onClick={() => handleSubscribe("cta")}>Subscribe</button>
           </div>
         )}
       </div>
@@ -1699,7 +1699,7 @@ export default function DateAndTell() {
             <input className="subscribe-page-input" placeholder="name@email.com" value={email}
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") handleSubscribe("page"); }} />
-            <button className="subscribe-page-btn" onClick={() => handleSubscribe("page")}>Join waitlist (it's free)</button>
+            <button className="subscribe-page-btn" onClick={() => handleSubscribe("page")}>Subscribe (it's free)</button>
           </>)}
           <p className="subscribe-page-fine">No spam, ever. Unsubscribe anytime.</p>
         </div>
