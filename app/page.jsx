@@ -1,4 +1,5 @@
 "use client";
+import HowItWorksCarousel from "@/components/HowItWorksCarousel";
 import { useState, useEffect, useCallback, useRef } from "react";
 
 // ── Supabase Config ──
@@ -1618,9 +1619,9 @@ export default function DateAndTell() {
       </div>
       </div>
 
-      <div className="how-section">
-        <div className="how-inner">
-          <div className="how-title">How it works</div>
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "0 48px 60px" }}>
+  <HowItWorksCarousel />
+</div>
           <div className="how-grid">
             <div className="how-card"><div className="how-num">01</div><h3>Tell your story</h3><p>Submit your anonymous dating story. Chaotic, wholesome, unhinged, we want it all. No names, no judgment.</p></div>
             <div className="how-card"><div className="how-num">02</div><h3>We give it a glow-up</h3><p>Our AI polishes your story while keeping your voice. All identifying details are removed automatically.</p></div>
@@ -1725,6 +1726,15 @@ export default function DateAndTell() {
                   {submitting ? <><span className="spinner" /> Our AI is polishing your story...</> : "Submit story"}
                 </button>
                 <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed. All stories go through an approval process before going live.</p>
+                <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed. All stories go through an approval process before going live.</p>
+<div style={{ marginTop: 32 }}>
+  <HowItWorksCarousel />
+</div>
+```
+
+Commit message:
+```
+feat: add HowItWorksCarousel to homepage and submit page
               </>
             ) : (
               <>
