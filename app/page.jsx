@@ -1,5 +1,5 @@
 "use client";
-import HowItWorksCarousel from "@/components/HowItWorksCarousel";
+import HowItWorksCarousel from "../components/HowItWorksCarousel";
 import { useState, useEffect, useCallback, useRef } from "react";
 
 // ── Supabase Config ──
