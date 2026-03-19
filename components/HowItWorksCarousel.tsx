@@ -115,9 +115,19 @@ const STEPS = [
   },
 ];
 
+const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+
 export default function HowItWorksCarousel() {
   const [current, setCurrent] = useState(0);
+  const [mobile, setMobile] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const check = () => setMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const goTo = (i: number) => setCurrent(i);
 
@@ -146,7 +156,7 @@ export default function HowItWorksCarousel() {
 
   return (
     <div style={{ width: "100%", fontFamily: "inherit" }}>
-      <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.07em", color: "rgba(255,255,255,0.5)", fontWeight: 500, marginBottom: 12 }}>
+      <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.07em", color: "rgba(255,255,255,0.6)", fontWeight: 500, marginBottom: 12 }}>
         How it works
       </p>
 
@@ -168,52 +178,57 @@ export default function HowItWorksCarousel() {
               style={{
                 minWidth: "100%",
                 display: "flex",
-                border: "0.5px solid #E5E7EB",
+                flexDirection: mobile ? "row" : "row",
+                border: "0.5px solid rgba(255,255,255,0.15)",
                 borderRadius: 12,
                 background: "white",
                 overflow: "hidden",
-                minHeight: 152,
+                minHeight: mobile ? 100 : 152,
               }}
             >
-              {/* Illustration */}
+              {/* Illustration — always side by side, smaller on mobile */}
               <div
                 style={{
-                  width: 130,
+                  width: mobile ? 80 : 130,
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  padding: 16,
+                  padding: mobile ? 10 : 16,
                   ...step.bgStyle,
                 }}
               >
-                {step.illustration}
+                <div style={{ transform: mobile ? "scale(0.65)" : "scale(1)", transformOrigin: "center" }}>
+                  {step.illustration}
+                </div>
               </div>
 
               {/* Text */}
               <div
                 style={{
                   flex: 1,
-                  padding: "20px 20px 18px 20px",
+                  padding: mobile ? "12px" : "20px 20px 18px 20px",
                   borderLeft: "0.5px solid #E5E7EB",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
                 }}
               >
-                <p style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.07em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: 5 }}>
+                <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.07em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: 4 }}>
                   {step.label}
                 </p>
-                <p style={{ fontSize: 14.5, fontWeight: 500, color: "#111827", lineHeight: 1.35, marginBottom: 7 }}>
+                <p style={{ fontSize: mobile ? 13 : 14.5, fontWeight: 500, color: "#111827", lineHeight: 1.3, marginBottom: mobile ? 4 : 7 }}>
                   {step.title}
                 </p>
-                <p style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.55 }}>
-                  {step.desc}
-                </p>
+                {!mobile && (
+                  <p style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.55 }}>
+                    {step.desc}
+                  </p>
+                )}
                 <span
                   style={{
                     display: "inline-block",
-                    marginTop: 10,
+                    marginTop: 8,
                     fontSize: 11,
                     fontWeight: 500,
                     padding: "3px 10px",
@@ -236,10 +251,10 @@ export default function HowItWorksCarousel() {
           onClick={() => nav(-1)}
           disabled={current === 0}
           style={{
-            background: "none",
-            border: "0.5px solid #E5E7EB",
+            background: "rgba(255,255,255,0.1)",
+            border: "0.5px solid rgba(255,255,255,0.3)",
             borderRadius: 8,
-            color: "#6B7280",
+            color: "white",
             fontSize: 13,
             padding: "5px 12px",
             cursor: current === 0 ? "not-allowed" : "pointer",
@@ -259,7 +274,7 @@ export default function HowItWorksCarousel() {
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                background: i === current ? "#2563EB" : "#D1D5DB",
+                background: i === current ? "white" : "rgba(255,255,255,0.35)",
                 border: "none",
                 cursor: "pointer",
                 padding: 0,
@@ -274,10 +289,10 @@ export default function HowItWorksCarousel() {
           onClick={() => nav(1)}
           disabled={current === STEPS.length - 1}
           style={{
-            background: "none",
-            border: "0.5px solid #E5E7EB",
+            background: "rgba(255,255,255,0.1)",
+            border: "0.5px solid rgba(255,255,255,0.3)",
             borderRadius: 8,
-            color: "#6B7280",
+            color: "white",
             fontSize: 13,
             padding: "5px 12px",
             cursor: current === STEPS.length - 1 ? "not-allowed" : "pointer",
