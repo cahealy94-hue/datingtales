@@ -1622,13 +1622,6 @@ export default function DateAndTell() {
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "0 48px 60px" }}>
   <HowItWorksCarousel />
 </div>
-          <div className="how-grid">
-            <div className="how-card"><div className="how-num">01</div><h3>Tell your story</h3><p>Submit your anonymous dating story. Chaotic, wholesome, unhinged, we want it all. No names, no judgment.</p></div>
-            <div className="how-card"><div className="how-num">02</div><h3>We give it a glow-up</h3><p>Our AI polishes your story while keeping your voice. All identifying details are removed automatically.</p></div>
-            <div className="how-card"><div className="how-num">03</div><h3>Friday drop</h3><p>Every Friday, the best stories go live on the site and land in your inbox. Fresh stories, weekly.</p></div>
-          </div>
-        </div>
-      </div>
 
       <div className="cta-section">
         <div className="cta-title">Your inbox deserves better stories.</div>
