@@ -2166,7 +2166,7 @@ export default function DateAndTell() {
           <p>13.4. You may not assign these Terms without our prior written consent. We may assign these Terms without restriction.</p>
 
           <h2>14. Contact</h2>
-          <p>Date&Tell<br />Email: <a href="mailto:hello@dateandtell.com">hello@dateandtell.com</a></p>
+          <p>Date and Tell<br />Email: <a href="mailto:hello@dateandtell.com">hello@dateandtell.com</a><br />c/o Northwest Registered Agent, LLC<br />90 State Street, Suite 700, Albany, NY 12207</p>
         </div>
       )}
 
@@ -2229,7 +2229,7 @@ export default function DateAndTell() {
           <p>We may update this Policy from time to time. Material changes will be communicated via email or a notice on the Service at least thirty (30) days before taking effect. Continued use constitutes acceptance.</p>
 
           <h2>12. Contact</h2>
-          <p>Date&Tell<br />Email: <a href="mailto:hello@dateandtell.com">hello@dateandtell.com</a></p>
+<p>Date and Tell LLC<br />Email: <a href="mailto:hello@dateandtell.com">hello@dateandtell.com</a><br />c/o Northwest Registered Agent, LLC<br />90 State Street, Suite 700, Albany, NY 12207</p>
         </div>
       )}
 
