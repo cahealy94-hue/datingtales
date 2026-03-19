@@ -1619,8 +1619,10 @@ export default function DateAndTell() {
       </div>
       </div>
 
-      <div style={{ maxWidth: 724, margin: "0 auto", padding: "0 48px 60px" }}>
-  <HowItWorksCarousel />
+      <div style={{ background: "#0F172A", padding: "48px" }}>
+  <div style={{ maxWidth: 724, margin: "0 auto" }}>
+    <HowItWorksCarousel />
+  </div>
 </div>
 
       <div className="cta-section">
