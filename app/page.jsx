@@ -1619,7 +1619,7 @@ export default function DateAndTell() {
       </div>
       </div>
 
-      <div style={{ maxWidth: 640, margin: "0 auto", padding: "0 48px 60px" }}>
+      <div style={{ padding: "0 48px 60px" }}>
   <HowItWorksCarousel />
 </div>
 
@@ -1719,15 +1719,13 @@ export default function DateAndTell() {
                   {submitting ? <><span className="spinner" /> Our AI is polishing your story...</> : "Submit story"}
                 </button>
                 <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed. All stories go through an approval process before going live.</p>
-                <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed. All stories go through an approval process before going live.</p>
+        
 <div style={{ marginTop: 32 }}>
   <HowItWorksCarousel />
 </div>
 ```
 
-Commit message:
-```
-feat: add HowItWorksCarousel to homepage and submit page
+
               </>
             ) : (
               <>
