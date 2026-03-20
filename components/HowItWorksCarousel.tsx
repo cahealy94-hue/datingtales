@@ -238,9 +238,9 @@ const clearTimer = () => {
                   style={{
                     display: "inline-block",
                     marginTop: 8,
-                    fontSize: 11,
-                    fontWeight: 500,
-                    padding: "3px 10px",
+                    fontSize: mobile ? 10 : 11,
+fontWeight: 500,
+padding: mobile ? "2px 8px" : "3px 10px",
                     borderRadius: 999,
                     width: "fit-content",
                     ...step.tagStyle,
