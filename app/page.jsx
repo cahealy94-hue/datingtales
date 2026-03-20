@@ -1722,10 +1722,10 @@ export default function DateAndTell() {
                 </button>
                 <p className="submit-page-fine">🔒 <strong>100% anonymous.</strong> Names and identifying details are always removed. All stories go through an approval process before going live.</p>
         
-<div style={{ marginTop: 32 }}>
+<div style={{ background: "#2563EB", borderRadius: 16, padding: 32, marginTop: 32 }}>
   <HowItWorksCarousel />
 </div>
-```
+
 
 
               </>
