@@ -83,9 +83,10 @@ ${storyText}`
     const text = data.content?.[0]?.text || "";
 
     try {
-      result = JSON.parse(text);
-    } catch {
-      console.error("AI response not valid JSON:", text);
+  const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+  result = JSON.parse(cleaned);
+} catch {
+  console.error("AI response not valid JSON:", text);
       result = { status: "approved", title: "Untitled", theme: "Awkward Moments", author: "Anonymous", rewritten: storyText.slice(0, 750), tags: "" };
     }
   } catch (err) {
