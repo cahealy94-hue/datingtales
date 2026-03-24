@@ -1464,11 +1464,11 @@ export default function DateAndTell() {
   <InterstitialModal onCTA={() => setPage('submit')} />
 )}
       {showSubscribeConfirm && (
-        <SubscribeConfirmModal
-          onClose={() => setShowSubscribeConfirm(false)}
-          storiesPath="/library"
-        />
-      )}
+  <SubscribeConfirmModal
+    onClose={() => setShowSubscribeConfirm(false)}
+    onGoToLibrary={() => setPage('library')}
+  />
+)}
 
       {/* Nav */}
       <div className="nav-wrapper">
@@ -1518,9 +1518,7 @@ export default function DateAndTell() {
             Bite-sized dating stories, dropping in your inbox every Friday. Because dating is more fun when we're all in on the joke.
           </p>
           <div className={loaded ? "fade-up d3" : ""}>
-            {heroSub ? (
-              <div className="hero-subbed-success">✓ You're subscribed! New stories hit your inbox every Friday.</div>
-            ) : (
+            {heroSub ? null : (
               <div className="hero-email">
                 <input className="hero-input" placeholder="name@email.com" value={email}
                   onChange={e => setEmail(e.target.value)}
@@ -1642,9 +1640,7 @@ export default function DateAndTell() {
       <div className="cta-section">
         <div className="cta-title">Your inbox deserves better stories.</div>
         <p className="cta-sub">Bite-sized dating stories from real people, dropping every Friday. Love, Anonymous.</p>
-        {ctaSub ? (
-          <div className="hero-subbed-success" style={{ maxWidth: 480, margin: "0 auto" }}>✓ You're subscribed! New stories hit your inbox every Friday.</div>
-        ) : (
+        {ctaSub ? null : (
           <div className="cta-email">
             <input className="cta-input" placeholder="name@email.com" value={email} onChange={e => setEmail(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") handleSubscribe("cta"); }} />
