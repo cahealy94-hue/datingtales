@@ -41,6 +41,7 @@ export default function SubscribeConfirmModal({ onClose, onGoToLibrary }: Subscr
           padding: '2rem 1.75rem 1.75rem', width: '100%',
           maxWidth: '440px', position: 'relative',
           animation: 'fadeInUp 0.2s ease-out',
+          maxHeight: '90vh', overflowY: 'auto',
         }}
       >
         {/* Close button */}
@@ -64,7 +65,7 @@ export default function SubscribeConfirmModal({ onClose, onGoToLibrary }: Subscr
           fontWeight: 800, color: '#111827', lineHeight: 1.15,
           marginBottom: '0.5rem', paddingRight: '2rem',
         }}>
-          You&apos;re officially one of us.
+          Buckle up. The best worst dates await.
         </div>
 
         {/* Subtext */}
@@ -96,8 +97,22 @@ export default function SubscribeConfirmModal({ onClose, onGoToLibrary }: Subscr
           </div>
         </div>
 
+        {/* Primary CTA */}
+        <button
+          onClick={handleCTA}
+          style={{
+            display: 'block', width: '100%', background: '#2563EB',
+            color: '#ffffff', fontFamily: "'DM Sans', sans-serif",
+            fontSize: '15px', fontWeight: 600, border: 'none',
+            borderRadius: '12px', padding: '14px 20px',
+            cursor: 'pointer', textAlign: 'center', marginBottom: '1.25rem',
+          }}
+        >
+          Read this week&apos;s stories →
+        </button>
+
         {/* Story teaser */}
-        <div style={{ borderTop: '1px solid #f3f4f6', margin: '1.25rem 0 1rem' }} />
+        <div style={{ borderTop: '1px solid #f3f4f6', margin: '0 0 1rem' }} />
         <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: '0.75rem' }}>
           A taste of what&apos;s inside
         </p>
@@ -106,13 +121,12 @@ export default function SubscribeConfirmModal({ onClose, onGoToLibrary }: Subscr
           onClick={handleTeaserClick}
           style={{
             background: '#f9fafb', border: '1.5px solid #e5e7eb',
-            borderRadius: '14px', padding: '16px', marginBottom: '1.25rem',
-            cursor: 'pointer', transition: 'border-color 0.15s',
+            borderRadius: '14px', padding: '16px',
+            cursor: 'pointer',
           }}
           onMouseEnter={e => (e.currentTarget.style.borderColor = '#2563EB')}
           onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5e7eb')}
         >
-          {/* Theme badge */}
           <span style={{
             display: 'inline-block', fontSize: '11px', fontWeight: 700,
             padding: '4px 12px', borderRadius: '100px', marginBottom: '10px',
@@ -127,7 +141,7 @@ export default function SubscribeConfirmModal({ onClose, onGoToLibrary }: Subscr
           </p>
 
           <p style={{ fontSize: '13px', color: '#6b7280', lineHeight: 1.55, marginBottom: '10px' }}>
-            {TEASER_STORY.text.length > 120 ? TEASER_STORY.text.slice(0, 120) + '...' : TEASER_STORY.text}
+            {TEASER_STORY.text.slice(0, 120)}...
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -141,20 +155,6 @@ export default function SubscribeConfirmModal({ onClose, onGoToLibrary }: Subscr
             <span style={{ fontSize: '12px', color: '#2563EB', fontWeight: 600 }}>Read more →</span>
           </div>
         </div>
-
-        {/* Primary CTA */}
-        <button
-          onClick={handleCTA}
-          style={{
-            display: 'block', width: '100%', background: '#2563EB',
-            color: '#ffffff', fontFamily: "'DM Sans', sans-serif",
-            fontSize: '15px', fontWeight: 600, border: 'none',
-            borderRadius: '12px', padding: '14px 20px',
-            cursor: 'pointer', textAlign: 'center',
-          }}
-        >
-          Read this week&apos;s stories →
-        </button>
       </div>
 
       <style>{`
