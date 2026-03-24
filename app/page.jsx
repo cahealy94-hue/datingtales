@@ -1460,7 +1460,9 @@ export default function DateAndTell() {
     <div style={{ fontFamily: "var(--font)", background: "white", minHeight: "100vh" }}>
       <style>{css}</style>
 
-      <InterstitialModal onCTA={() => setPage('submit')} />
+      {page !== 'submit' && (
+  <InterstitialModal onCTA={() => setPage('submit')} />
+)}
       {showSubscribeConfirm && (
         <SubscribeConfirmModal
           onClose={() => setShowSubscribeConfirm(false)}
