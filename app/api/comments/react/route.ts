@@ -1,58 +1,55 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function supabaseHeaders() {
+  return {
+    "Content-Type": "application/json",
+    apikey: SUPABASE_SERVICE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+  }
+}
 
 // POST /api/comments/react
 // Body: { comment_id, session_id, reaction: 'like' | 'dislike' | null }
-// Passing null removes the reaction (toggle off)
-export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const { comment_id, session_id, reaction } = body
+export async function POST(request) {
+  const { comment_id, session_id, reaction } = await request.json()
 
   if (!comment_id || !session_id) {
-    return NextResponse.json({ error: 'comment_id and session_id are required' }, { status: 400 })
+    return Response.json({ error: "comment_id and session_id are required" }, { status: 400 })
+  }
+  if (reaction !== null && reaction !== "like" && reaction !== "dislike") {
+    return Response.json({ error: "reaction must be like, dislike, or null" }, { status: 400 })
   }
 
-  if (reaction !== null && reaction !== 'like' && reaction !== 'dislike') {
-    return NextResponse.json({ error: 'reaction must be like, dislike, or null' }, { status: 400 })
-  }
+  // Delete existing reaction for this session + comment
+  await fetch(
+    `${SUPABASE_URL}/rest/v1/comment_reactions?comment_id=eq.${comment_id}&session_id=eq.${session_id}`,
+    { method: "DELETE", headers: supabaseHeaders() }
+  )
 
-  // Remove existing reaction first
-  await supabase
-    .from('comment_reactions')
-    .delete()
-    .eq('comment_id', comment_id)
-    .eq('session_id', session_id)
-
-  // If reaction is null, we're toggling off — we're done
+  // Insert new reaction (unless toggling off)
   if (reaction !== null) {
-    const { error } = await supabase
-      .from('comment_reactions')
-      .insert({ comment_id, session_id, reaction })
-
-    if (error) {
-      console.error('Error inserting reaction:', error)
-      return NextResponse.json({ error: 'Failed to save reaction' }, { status: 500 })
+    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/comment_reactions`, {
+      method: "POST",
+      headers: { ...supabaseHeaders(), Prefer: "return=minimal" },
+      body: JSON.stringify({ comment_id, session_id, reaction }),
+    })
+    if (!insertRes.ok) {
+      console.error("Reaction insert error:", await insertRes.text())
+      return Response.json({ error: "Failed to save reaction" }, { status: 500 })
     }
   }
 
   // Return updated counts
-  const { data: reactions, error: countError } = await supabase
-    .from('comment_reactions')
-    .select('reaction')
-    .eq('comment_id', comment_id)
+  const countRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/comment_reactions?comment_id=eq.${comment_id}&select=reaction`,
+    { headers: supabaseHeaders() }
+  )
+  const reactions = await countRes.json()
 
-  if (countError) {
-    return NextResponse.json({ error: 'Failed to fetch counts' }, { status: 500 })
-  }
-
-  return NextResponse.json({
-    likes: reactions.filter((r) => r.reaction === 'like').length,
-    dislikes: reactions.filter((r) => r.reaction === 'dislike').length,
+  return Response.json({
+    likes: reactions.filter(r => r.reaction === "like").length,
+    dislikes: reactions.filter(r => r.reaction === "dislike").length,
     my_reaction: reaction,
   })
 }
