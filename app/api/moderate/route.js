@@ -1,11 +1,43 @@
+// Simple in-memory rate limiter (resets on cold start)
+const rateLimitMap = new Map();
+const RATE_LIMIT = 5; // max submissions
+const RATE_WINDOW = 60 * 60 * 1000; // per 1 hour
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now - entry.windowStart > RATE_WINDOW) {
+    rateLimitMap.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+
+  if (entry.count >= RATE_LIMIT) return true;
+
+  entry.count++;
+  return false;
+}
+
 export async function POST(request) {
+  // ── Rate limiting ──
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
+
+  if (isRateLimited(ip)) {
+    return Response.json(
+      { status: "rejected", reason: "Too many submissions. Please try again later." },
+      { status: 429 }
+    );
+  }
+
   const { storyText, userId } = await request.json();
 
   if (!storyText || !storyText.trim()) {
     return Response.json({ status: "rejected", reason: "No story provided." }, { status: 400 });
   }
 
-  // Vercel provides geolocation headers automatically
   const city = request.headers.get("x-vercel-ip-city") || "";
   const country = request.headers.get("x-vercel-ip-country") || "";
 
@@ -80,15 +112,15 @@ ${storyText}`
     });
 
     const data = await response.json();
-console.log("Raw AI response:", JSON.stringify(data));
+    console.log("Raw AI response:", JSON.stringify(data));
 
-const text = data.content?.[0]?.text || "";
+    const text = data.content?.[0]?.text || "";
 
     try {
-  const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-  result = JSON.parse(cleaned);
-} catch {
-  console.error("AI response not valid JSON:", text);
+      const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      result = JSON.parse(cleaned);
+    } catch {
+      console.error("AI response not valid JSON:", text);
       result = { status: "approved", title: "Untitled", theme: "Awkward Moments", author: "Anonymous", rewritten: storyText.slice(0, 750), tags: "" };
     }
   } catch (err) {
