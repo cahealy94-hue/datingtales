@@ -3,6 +3,7 @@ import HowItWorksCarousel from "../components/HowItWorksCarousel";
 import InterstitialModal from "../components/InterstitialModal";
 import SubscribeConfirmModal from "../components/SubscribeConfirmModal";
 import { useState, useEffect, useCallback, useRef } from "react";
+import CommentsSection from "../components/CommentsSection";
 
 // ── Supabase Config ──
 const SUPABASE_URL = "https://vopnqpulwbofvbyztcta.supabase.co";
@@ -162,6 +163,7 @@ function StoryCard({ story, onReaction, onReport, onSave, reacted, isSaved, isTr
   const [selectedReason, setSelectedReason] = useState(null);
   const [pendingReport, setPendingReport] = useState(false);
   const [shared, setShared] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const beenThereShownRef = useRef(false);
 const [beenThereModal, setBeenThereModal] = useState(false);
   const menuRef = useRef(null);
@@ -232,6 +234,15 @@ const [beenThereModal, setBeenThereModal] = useState(false);
               </button>
             );
           })}
+       </div>
+        <div>
+          <button
+            onClick={() => setShowComments(c => !c)}
+            style={{ background: "none", border: "none", fontFamily: "var(--font)", fontSize: 13, fontWeight: 600, color: "var(--gray)", cursor: "pointer", padding: "8px 0 0", display: "flex", alignItems: "center", gap: 4 }}
+          >
+            💬 {showComments ? "Hide comments" : "Comments"}
+          </button>
+          {showComments && <CommentsSection storyId={story.id} />}
         </div>
       </div>
 
