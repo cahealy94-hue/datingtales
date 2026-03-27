@@ -1,6 +1,5 @@
 const BEEHIIV_API_KEY = process.env.BEEHIIV_API_KEY;
 const BEEHIIV_PUBLICATION_ID = process.env.BEEHIIV_PUBLICATION_ID;
-const CRON_SECRET = process.env.CRON_SECRET;
 
 const variants = [
   {
@@ -44,7 +43,7 @@ One weird moment is all it takes.`,
 
 export async function GET(request) {
   const authHeader = request.headers.get("x-cron-secret");
-  if (authHeader !== CRON_SECRET) {
+if (authHeader !== process.env.CRON_SECRET) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
