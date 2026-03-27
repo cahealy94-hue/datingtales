@@ -385,6 +385,8 @@ export default function DateAndTell() {
     setPageState(getPageFromPath());
     const onPop = () => setPageState(getPageFromPath());
     window.addEventListener("popstate", onPop);
+    const onBannerNav = (e) => setPage(e.detail);
+    window.addEventListener("navigate", onBannerNav);
 
     // Parse recovery token from Supabase redirect hash
     if (window.location.pathname === "/reset-password" && window.location.hash) {
@@ -399,7 +401,10 @@ export default function DateAndTell() {
       }
     }
 
-    return () => window.removeEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      window.removeEventListener("navigate", onBannerNav);
+    };
   }, []);
 
   // Fetch published stories from Supabase
