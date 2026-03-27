@@ -20,12 +20,12 @@ export default function AnnouncementBanner() {
   if (!visible) return null
 
   return (
-    <div style={{ background: '#2563eb', color: 'white', width: '100%', zIndex: 50 }}>
+    <div style={{ background: "#111827", color: 'white', width: '100%', zIndex: 50 }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0.6rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-            background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)',
+            background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
             borderRadius: '999px', padding: '0.15rem 0.6rem', fontSize: '0.7rem',
             fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap',
           }}>
