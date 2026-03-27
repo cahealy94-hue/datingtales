@@ -163,7 +163,6 @@ export default function CommentsSection({ storyId }: CommentsSectionProps) {
       if (!res.ok) { setError(data.error || 'Something went wrong'); return }
       setComments(prev => [...prev, data.comment])
       setSubmitted(true)
-      setAuthorName('')
       setContent('')
       setTimeout(() => setSubmitted(false), 4000)
     } catch {
