@@ -20,7 +20,7 @@ async function moderateComment(content) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: "claude-haiku-4-5",
         max_tokens: 10,
         messages: [{
           role: "user",
