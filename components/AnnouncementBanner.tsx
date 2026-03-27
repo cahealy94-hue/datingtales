@@ -12,20 +12,29 @@ export default function AnnouncementBanner() {
     if (!dismissed) setVisible(true)
   }, [])
 
-  const dismiss = () => {
+  const dismiss = (e: React.MouseEvent) => {
+    e.stopPropagation()
     localStorage.setItem(BANNER_KEY, '1')
     setVisible(false)
+  }
+
+  const navigate = () => {
+    window.dispatchEvent(new CustomEvent('navigate', { detail: 'library' }))
   }
 
   if (!visible) return null
 
   return (
-    <div style={{
-      background: '#EF4444',
-      color: 'white',
-      width: '100%',
-      fontFamily: "'DM Sans', system-ui, sans-serif",
-    }}>
+    <div
+      onClick={navigate}
+      style={{
+        background: '#EC4899',
+        color: 'white',
+        width: '100%',
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+        cursor: 'pointer',
+      }}
+    >
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto',
@@ -54,8 +63,8 @@ export default function AnnouncementBanner() {
             fontSize: '0.68rem',
             fontWeight: 700,
             letterSpacing: '0.05em',
-            textTransform: 'uppercase',
-            whiteSpace: 'nowrap',
+            textTransform: 'uppercase' as const,
+            whiteSpace: 'nowrap' as const,
             flexShrink: 0,
           }}>
             💬 New
@@ -65,7 +74,7 @@ export default function AnnouncementBanner() {
             fontSize: '0.875rem',
             fontWeight: 500,
             color: 'white',
-            whiteSpace: 'nowrap',
+            whiteSpace: 'nowrap' as const,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
           }}>
@@ -74,25 +83,16 @@ export default function AnnouncementBanner() {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-          <a
-            href="/library"
-            onClick={(e) => {
-              e.preventDefault()
-              // Dispatch a custom event that page.jsx can listen to
-              window.dispatchEvent(new CustomEvent('navigate', { detail: 'library' }))
-            }}
-            style={{
-              color: 'white',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              textDecoration: 'none',
-              borderBottom: '1.5px solid rgba(255,255,255,0.6)',
-              paddingBottom: '1px',
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <span style={{
+            color: 'white',
+            fontSize: '0.8rem',
+            fontWeight: 700,
+            borderBottom: '1.5px solid rgba(255,255,255,0.6)',
+            paddingBottom: '1px',
+            whiteSpace: 'nowrap' as const,
+          }}>
             Try it →
-          </a>
+          </span>
           <button
             onClick={dismiss}
             aria-label="Dismiss"
