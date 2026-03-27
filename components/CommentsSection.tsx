@@ -120,7 +120,6 @@ export default function CommentsSection({ storyId }: CommentsSectionProps) {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [authorName, setAuthorName] = useState('')
   const [content, setContent] = useState('')
   const sessionIdRef = useRef<string>('')
 
@@ -156,7 +155,7 @@ export default function CommentsSection({ storyId }: CommentsSectionProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           story_id: storyId,
-          author_name: authorName.trim() || 'Anonymous',
+          author_name: 'Anonymous',
           content: content.trim(),
         }),
       })
@@ -206,18 +205,7 @@ export default function CommentsSection({ storyId }: CommentsSectionProps) {
           </div>
         ) : (
           <>
-            <input
-              type="text"
-              placeholder="Your name (optional)"
-              value={authorName}
-              onChange={e => setAuthorName(e.target.value)}
-              maxLength={50}
-              style={{
-                width: '100%', padding: '0.65rem 0.85rem', border: '1px solid #d1d5db',
-                borderRadius: '8px', fontSize: '0.9rem', fontFamily: 'inherit',
-                color: '#111827', background: '#fafafa', boxSizing: 'border-box',
-              }}
-            />
+            
             <textarea
               placeholder="Share your reaction or story…"
               value={content}
