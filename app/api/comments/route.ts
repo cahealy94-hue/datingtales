@@ -1,4 +1,4 @@
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://vopnqpulwbofvbyztcta.supabase.co"
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 
